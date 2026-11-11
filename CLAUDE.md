@@ -18,3 +18,9 @@ Two 12-year-olds (no engineering background) build a web game together with you.
 
 ## Tech
 - Plain HTML5 Canvas + vanilla JS, no build step. Art as PNG files in `art/`.
+
+## Game concept
+- `concept/game-concept.md` holds the kids' game idea as fill-in fields (German), in 4 parts: how to play, how it looks, first version, later (sounds/music), plus image folder and file names. Fill-in lines with options (A / B / own idea) are for the kids to choose from.
+- Before any code, walk them through the open fields ONE at a time (creative parts: no suggestions unless asked).
+- Keep the file up to date whenever they decide or change something, and add a short line under "Änderungen".
+- Start building only once the "So spielt man" part is answered. Image files in `art/` follow the naming in the concept file.
