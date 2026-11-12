@@ -22,12 +22,42 @@ const BASE_LAYOUT = [
 
 // Jede Runde verschieben sich die Plattformen: Spalte um -2..+2, Zeile um -1..+1.
 let platforms = [];
-function shufflePlatforms() {
-  platforms = BASE_LAYOUT.map(([c, r, color]) => {
+
+function randomPlatforms() {
+  return BASE_LAYOUT.map(([c, r, color]) => {
     const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 5) - 2));
     const row = Math.max(2, Math.min(15, r + Math.floor(Math.random() * 3) - 1));
     return { x: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color };
   });
+}
+
+// Kann man von Plattform a nach Plattform b springen? (vorsichtig gerechnet)
+function canReach(a, b) {
+  const gap = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w));
+  const rise = a.y - b.y; // positiv = b liegt hoeher
+  const disc = JUMP * JUMP - 2 * GRAVITY * rise;
+  if (disc <= 0) return false;
+  const t = (-JUMP + Math.sqrt(disc)) / GRAVITY;     // Landung beim Runterfallen
+  const maxGap = 0.8 * SPEED * t;                    // 20% Sicherheit
+  return gap <= maxGap;
+}
+
+// Von der ersten Plattform aus muss man ALLE Plattformen erreichen koennen.
+function allReachable(list) {
+  const seen = new Set([0]), todo = [0];
+  while (todo.length) {
+    const i = todo.pop();
+    list.forEach((p, j) => { if (!seen.has(j) && canReach(list[i], p)) { seen.add(j); todo.push(j); } });
+  }
+  return seen.size === list.length;
+}
+
+function shufflePlatforms() {
+  for (let i = 0; i < 500; i++) {
+    const list = randomPlatforms();
+    if (allReachable(list)) { platforms = list; return; }
+  }
+  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color }));
 }
 shufflePlatforms();
 
