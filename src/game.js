@@ -69,7 +69,11 @@ function makeActor(x, y) {
 }
 
 let score1 = 0, score2 = 0, matchOver = false;
-const WIN_SCORE = 5;           // Wer zuerst 5 Punkte hat, gewinnt
+const WIN_SCORE = 10;          // Wer zuerst 10 Punkte hat, gewinnt
+const SWAP_EVERY = 5;          // Alle 5 Runden tauschen Faenger (gelb) und Laeufer (gruen)
+let rounds = 0;                // gespielte Runden
+// Spieler 1 = W/A/D (player), Spieler 2 = Pfeiltasten (player2)
+const catcherIs1 = () => Math.floor(rounds / SWAP_EVERY) % 2 === 0;
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
@@ -102,40 +106,44 @@ function physics(a, dt) {
   if (a.y < 0) { a.y = 0; a.vy = 0; } // oben ist eine Decke
 }
 
-// Runde zu Ende: who = 1 (Gelb), 2 (Gruen) oder 0 (keiner) bekommt einen Punkt.
+// Runde zu Ende: who = 1 (Spieler 1), 2 (Spieler 2) oder 0 (keiner) bekommt einen Punkt.
 function endRound(who, text) {
   state = "end"; winner = text;
+  rounds++;
   if (who === 1) score1++;
   if (who === 2) score2++;
   if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
     matchOver = true;
-    winner = (score1 >= WIN_SCORE ? "GELB" : "GRÜN") + " GEWINNT DAS SPIEL!";
+    winner = (score1 >= WIN_SCORE ? "SPIELER 1" : "SPIELER 2") + " GEWINNT DAS SPIEL!";
   }
 }
 
 function update(dt) {
   if (state !== "play") {
     if (keys["enter"] || keys[" "]) {
-      if (matchOver) { score1 = 0; score2 = 0; matchOver = false; }
+      if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; }
       reset();
     }
     return;
   }
   timeLeft -= dt;
 
-  // Gelb ist der Faenger. Gruen kann ihn mit Pfeil runter 3 Sekunden einfrieren (1x pro Spiel).
-  if (keys["arrowdown"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
+  // Faenger = gelb, Laeufer = gruen. Der Laeufer kann den Faenger 3 Sekunden einfrieren (1x pro Runde):
+  // Spieler 1 mit S, Spieler 2 mit Pfeil runter.
+  const c1 = catcherIs1();
+  if (keys[c1 ? "arrowdown" : "s"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
   if (freezeLeft > 0) freezeLeft -= dt;
   const frozen = freezeLeft > 0;
 
-  // Faenger (gelb): W springen, A links, D rechts
-  player.vx = frozen ? 0 : ((keys["d"] ? 1 : 0) - (keys["a"] ? 1 : 0)) * SPEED;
-  if (keys["w"] && player.onGround && !frozen) player.vy = JUMP;
+  // Spieler 1: W springen, A links, D rechts
+  const f1 = frozen && c1, f2 = frozen && !c1;
+  player.vx = f1 ? 0 : ((keys["d"] ? 1 : 0) - (keys["a"] ? 1 : 0)) * SPEED;
+  if (keys["w"] && player.onGround && !f1) player.vy = JUMP;
   physics(player, dt);
 
   // Spieler 2: Pfeiltasten (hoch = springen)
-  player2.vx = ((keys["arrowright"] ? 1 : 0) - (keys["arrowleft"] ? 1 : 0)) * SPEED;
-  if (keys["arrowup"] && player2.onGround) player2.vy = JUMP;
+  player2.vx = f2 ? 0 : ((keys["arrowright"] ? 1 : 0) - (keys["arrowleft"] ? 1 : 0)) * SPEED;
+  if (keys["arrowup"] && player2.onGround && !f2) player2.vy = JUMP;
   physics(player2, dt);
 
   if (CHASER_ON) {
@@ -170,11 +178,13 @@ function update(dt) {
   const caught = player.x < player2.x + player2.w && player.x + player.w > player2.x &&
                  player.y < player2.y + player2.h && player.y + player.h > player2.y;
   const p1Out = player.y > H, p2Out = player2.y > H;
-  if (caught) endRound(1, "Gelb hat Grün gefangen!");
+  const catcherN = c1 ? 1 : 2, runnerN = c1 ? 2 : 1;
+  const catcherOut = c1 ? p1Out : p2Out, runnerOut = c1 ? p2Out : p1Out;
+  if (caught) endRound(catcherN, "Fänger hat gefangen: Punkt für Spieler " + catcherN + "!");
   else if (p1Out && p2Out) endRound(0, "Unentschieden!");
-  else if (p1Out) endRound(2, "Gelb ist gefallen: Punkt für Grün!");
-  else if (p2Out) endRound(1, "Grün ist gefallen: Punkt für Gelb!");
-  else if (timeLeft <= 0) { timeLeft = 0; endRound(2, "Zeit um: Punkt für Grün!"); }
+  else if (catcherOut) endRound(runnerN, "Fänger ist gefallen: Punkt für Spieler " + runnerN + "!");
+  else if (runnerOut) endRound(catcherN, "Läufer ist gefallen: Punkt für Spieler " + catcherN + "!");
+  else if (timeLeft <= 0) { timeLeft = 0; endRound(runnerN, "Zeit um: Punkt für Spieler " + runnerN + "!"); }
 }
 
 function drawSmiley(a, color, angry) {
@@ -272,13 +282,19 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
-  drawSmiley(player, freezeLeft > 0 ? "#8fd9ff" : "#ffe135", true);
-  drawSmiley(player2, "#7ee081", false);
+  const cn = catcherIs1();
+  const catcherColor = freezeLeft > 0 ? "#8fd9ff" : "#ffe135";
+  drawSmiley(player, cn ? catcherColor : "#7ee081", cn);
+  drawSmiley(player2, cn ? "#7ee081" : catcherColor, !cn);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
-  ctx.textAlign = "right"; ctx.fillText("Gelb " + score1 + " : " + score2 + " Grün  (bis " + WIN_SCORE + ")", W - 16, 36); ctx.textAlign = "left";
+  ctx.textAlign = "right";
+  ctx.fillText("Spieler 1: " + score1 + "   Spieler 2: " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
+  ctx.textAlign = "left";
   ctx.font = "20px sans-serif";
-  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Grün: Pfeil runter = Fänger einfrieren (1x)", 16, 64);
+  const left = SWAP_EVERY - (rounds % SWAP_EVERY);
+  ctx.fillText((cn ? "Spieler 1" : "Spieler 2") + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
+  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
   if (state === "end") bigText(winner, matchOver ? "Enter = neues Spiel" : "Enter = nächste Runde");
 }
 

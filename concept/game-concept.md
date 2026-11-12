@@ -17,7 +17,7 @@
 - Zeichenstil: Pixel
 - Gegner und Hindernisse: Wütende Smileys (sie fangen den Spieler)
 - Extras zum Sammeln: keine
-- Punkte bekommt man für: Rundensieg (1 Punkt). Wer zuerst 5 Punkte hat, gewinnt das Spiel
+- Punkte bekommt man für: Rundensieg (1 Punkt). Wer zuerst 10 Punkte hat, gewinnt das Spiel. Alle 5 Runden tauschen Fänger (gelb) und Läufer (grün) die Rollen
 - Unsere besondere Idee: Mit der E-Taste kann man den Fänger für 3 Sekunden einfrieren, aber nur einmal pro Spiel
 
 ## 🛠️ Unsere erste Version
@@ -84,3 +84,4 @@ Dateinamen:
 - Plattformen werden so gemischt, dass man immer überall hinkommt (Sprungweite wird geprüft).
 - Mehr Plattformen (23). Von JEDER Plattform kann man jede andere erreichen, auch nach dem Mischen.
 - Punkte eingebaut: Rundensieger bekommt 1 Punkt, wer zuerst 5 hat, gewinnt.
+- Rollenwechsel alle 5 Runden eingebaut, Sieg bei 10 Punkten. Spieler 1 = W/A/D, Spieler 2 = Pfeiltasten. Einfrieren: Läufer drückt S (Spieler 1) oder Pfeil runter (Spieler 2), 1x pro Runde.
