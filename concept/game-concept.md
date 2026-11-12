@@ -94,3 +94,4 @@ Dateinamen:
 - Text unter der Zeit entfernt.
 - Grüner Hebel: jede Runde auf einer Plattform. Wer ihn berührt, lässt alle Plattformen außer der Hebel-Plattform verschwinden. Sie erscheinen sofort an neuen Stellen (immer noch alles erreichbar).
 - Hebel geändert: Alle Plattformen gleiten animiert an neue Stellen. Der Hebel zieht danach auf eine andere Plattform um und kann immer wieder benutzt werden.
+- Portale verbessert: Man kann jetzt leichter wieder zurück. Man ist schon nach einem kurzen Schritt (16 px) aus dem Portal heraus und kann es erneut benutzen.

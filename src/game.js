@@ -231,14 +231,20 @@ function update(dt) {
   // Portale: nach dem Teleportieren muss man erst aus dem Portal herauslaufen,
   // sonst wuerde man sofort zurueckspringen.
   const through = (a, justTeleported) => {
-    let inside = -1;
+    // Es zaehlt die Mitte der Figur: nahe an der Portalmitte (10 px) = hineingelaufen.
+    // Nach dem Teleportieren ist man wieder bereit, sobald man 16 px von der Mitte weg ist.
+    const cx = a.x + a.w / 2;
+    let near = -1, zone = false;
     for (let k = 0; k < 2; k++) {
       const r = portalRect(portals[k]);
-      if (a.x < r.x + r.w && a.x + a.w > r.x && a.y < r.y + r.h && a.y + a.h > r.y) inside = k;
+      const dx = Math.abs(cx - (r.x + r.w / 2));
+      const vOverlap = a.y < r.y + r.h && a.y + a.h > r.y;
+      if (vOverlap && dx < 10) near = k;
+      if (vOverlap && dx < 16) zone = true;
     }
-    if (inside < 0) return false;            // draussen: wieder bereit
-    if (justTeleported) return true;         // noch im Portal: warten
-    const dest = portals[1 - inside];
+    if (justTeleported) return zone;         // noch im Portalbereich: warten
+    if (near < 0) return false;
+    const dest = portals[1 - near];
     a.x = dest.x + dest.w / 2 - a.w / 2; a.y = dest.y - a.h;
     return true;
   };
