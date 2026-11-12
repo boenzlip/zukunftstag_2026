@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 
 const BLOCK = 60;
 const COLS = 16, ROWS = 9;
+const CHASER_ON = false;       // Fänger an/aus (true = Fänger ist im Spiel)
 const GAME_TIME = 60;          // Sekunden
 const GRAVITY = 1800, JUMP = -780, SPEED = 260;
 
@@ -62,6 +63,7 @@ function update(dt) {
   if (keys["w"] && player.onGround) player.vy = JUMP;
   physics(player, dt);
 
+  if (CHASER_ON) {
   // E: Fänger 3 Sekunden einfrieren (nur einmal pro Spiel)
   if (keys["e"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
   if (freezeLeft > 0) freezeLeft -= dt;
@@ -87,8 +89,10 @@ function update(dt) {
     chaser = makeActor(7.5 * BLOCK, 7 * BLOCK - 48);
   }
 
+  }
+
   // Verlieren: runtergefallen oder gefangen
-  const caught = player.x < chaser.x + chaser.w && player.x + player.w > chaser.x &&
+  const caught = CHASER_ON && player.x < chaser.x + chaser.w && player.x + player.w > chaser.x &&
                  player.y < chaser.y + chaser.h && player.y + player.h > chaser.y;
   if (player.y > canvas.height || caught) state = "lose";
   else if (timeLeft <= 0) { timeLeft = 0; state = "win"; }
@@ -135,12 +139,12 @@ function draw() {
       ctx.strokeRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
     }
   }
-  drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
+  if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
   drawSmiley(player, "#ffe135", false);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.font = "20px sans-serif";
-  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Eingefroren!" : "Einfrieren benutzt") : "E = Fänger einfrieren (1x)", 16, 64);
+  if (CHASER_ON) ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Eingefroren!" : "Einfrieren benutzt") : "E = Fänger einfrieren (1x)", 16, 64);
   if (state === "win") bigText("GEWONNEN! 🏆", "Enter = nochmal");
   if (state === "lose") bigText("VERLOREN", "Enter = nochmal");
 }

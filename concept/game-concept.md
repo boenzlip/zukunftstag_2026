@@ -72,3 +72,4 @@ Dateinamen:
 - Einfrieren mit E-Taste eingebaut.
 - Fänger bewegt sich jetzt schlauer (zielt voraus, wechselt Tempo, macht Pausen).
 - Fänger gefährlicher gemacht (schneller, weniger Pausen).
+- Fänger vorerst aus dem Spiel genommen (CHASER_ON = false in src/game.js).
