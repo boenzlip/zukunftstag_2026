@@ -4,7 +4,7 @@
 
 - Spielname (darf sich ändern): Jumps
 - Spielart: Jump’n’Run wie ein Fangspiel. Einer ist der Fänger und hat eine Minute Zeit, die anderen zu fangen. Wer von der Map runterfällt, stirbt.
-- Spieler: zu zweit am selben Laptop (Spieler 1: W/A/D, Spieler 2: Pfeiltasten)
+- Spieler: zu zweit am selben Laptop. Gelb = Fänger (W/A/D), Grün = Flüchtling (Pfeiltasten)
 - Unsere Spielfigur: Smiley mit Beinen
 - So steuert man sie: Tasten W (springen), A (links), D (rechts)
 - Das ist das Ziel: Nicht runterfallen und nicht vom Computer gefangen werden. Nach einer Minute hat der Spieler gewonnen.
@@ -78,3 +78,4 @@ Dateinamen:
 - Decke eingebaut: man kann oben nicht mehr rausspringen.
 - Hintergrund: Feuerkrater in der Wueste (nach Foto der Kinder).
 - Zu zweit am selben Laptop: Spieler 1 = W/A/D (gelb), Spieler 2 = Pfeiltasten (gruen). Wer runterfaellt, verliert.
+- Gelb ist jetzt der Fänger. Fängt er Grün (Berühren) in einer Minute, gewinnt er; sonst gewinnt Grün. Wer runterfällt, verliert. Grün friert Gelb mit Pfeil runter 3 Sekunden ein (1x pro Spiel).

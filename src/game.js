@@ -66,9 +66,14 @@ function update(dt) {
   }
   timeLeft -= dt;
 
-  // Spieler: W springen, A links, D rechts
-  player.vx = ((keys["d"] ? 1 : 0) - (keys["a"] ? 1 : 0)) * SPEED;
-  if (keys["w"] && player.onGround) player.vy = JUMP;
+  // Gelb ist der Faenger. Gruen kann ihn mit Pfeil runter 3 Sekunden einfrieren (1x pro Spiel).
+  if (keys["arrowdown"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
+  if (freezeLeft > 0) freezeLeft -= dt;
+  const frozen = freezeLeft > 0;
+
+  // Faenger (gelb): W springen, A links, D rechts
+  player.vx = frozen ? 0 : ((keys["d"] ? 1 : 0) - (keys["a"] ? 1 : 0)) * SPEED;
+  if (keys["w"] && player.onGround && !frozen) player.vy = JUMP;
   physics(player, dt);
 
   // Spieler 2: Pfeiltasten (hoch = springen)
@@ -104,14 +109,15 @@ function update(dt) {
 
   }
 
-  // Verlieren: runtergefallen oder gefangen
-  const caught = CHASER_ON && player.x < chaser.x + chaser.w && player.x + player.w > chaser.x &&
-                 player.y < chaser.y + chaser.h && player.y + player.h > chaser.y;
-  const p1Out = player.y > H || caught, p2Out = player2.y > H;
-  if (p1Out && p2Out) { state = "end"; winner = "Unentschieden!"; }
-  else if (p1Out) { state = "end"; winner = "Spieler 2 gewinnt!"; }
-  else if (p2Out) { state = "end"; winner = "Spieler 1 gewinnt!"; }
-  else if (timeLeft <= 0) { timeLeft = 0; state = "end"; winner = "Zeit um: beide gewinnen!"; }
+  // Gelb faengt Gruen, wenn sie sich beruehren. Wer runterfaellt, verliert.
+  const caught = player.x < player2.x + player2.w && player.x + player.w > player2.x &&
+                 player.y < player2.y + player2.h && player.y + player.h > player2.y;
+  const p1Out = player.y > H, p2Out = player2.y > H;
+  if (caught) { state = "end"; winner = "Fänger (gelb) hat gefangen!"; }
+  else if (p1Out && p2Out) { state = "end"; winner = "Unentschieden!"; }
+  else if (p1Out) { state = "end"; winner = "Fänger gefallen: Grün gewinnt!"; }
+  else if (p2Out) { state = "end"; winner = "Grün gefallen: Fänger gewinnt!"; }
+  else if (timeLeft <= 0) { timeLeft = 0; state = "end"; winner = "Zeit um: Grün gewinnt!"; }
 }
 
 function drawSmiley(a, color, angry) {
@@ -209,12 +215,12 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
-  drawSmiley(player, "#ffe135", false);
+  drawSmiley(player, freezeLeft > 0 ? "#8fd9ff" : "#ffe135", true);
   drawSmiley(player2, "#7ee081", false);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.font = "20px sans-serif";
-  if (CHASER_ON) ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Eingefroren!" : "Einfrieren benutzt") : "E = Fänger einfrieren (1x)", 16, 64);
+  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Grün: Pfeil runter = Fänger einfrieren (1x)", 16, 64);
   if (state === "end") bigText(winner, "Enter = nochmal");
 }
 
