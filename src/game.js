@@ -424,6 +424,13 @@ function drawPlayer(a, ringColor, emojiIdx, isCatcher) {
   ctx.strokeStyle = ringColor; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.stroke();
   drawEmoji(emojiIdx, cx - 20, cy - 20, 40);
+  if (isCatcher) { // Faenger traegt einen roten Hut
+    ctx.fillStyle = "#d62828"; ctx.fillRect(cx - 11, cy - 38, 22, 17);      // Hutkrone
+    ctx.fillStyle = "#9d0208"; ctx.fillRect(cx - 11, cy - 27, 22, 4);       // Hutband
+    ctx.fillStyle = "#d62828"; ctx.fillRect(cx - 19, cy - 22, 38, 5);       // Krempe
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+    ctx.strokeRect(cx - 11, cy - 38, 22, 17); ctx.strokeRect(cx - 19, cy - 22, 38, 5);
+  }
 }
 
 function drawSmiley(a, color, angry) {

@@ -104,3 +104,4 @@ Dateinamen:
 - R-Taste: startet das ganze Spiel von vorn (Namen, Emojis, Punkte).
 - Hintergrund: dunkle Wolken ziehen langsam vorbei und es regnet (über dem Feuerkrater).
 - Feuerkrater-Hintergrund entfernt: jetzt nur Gewitterhimmel mit ziehenden Wolken und Regen. Zeit und Punkte sind weiß.
+- Der Fänger trägt einen roten Hut (auch nach dem Rollenwechsel).
