@@ -26,7 +26,7 @@ Zum Start: eine Figur, ein kurzer Level, eine Gefahr und ein Ziel.
 
 - Das muss schon funktionieren:
 - Das kommt später:
-- Wer übernimmt was:
+- Wer übernimmt was: Laptop 1 macht den Code, Laptop 2 macht die Bilder
 
 ## 🔊 Später entscheiden
 
@@ -64,6 +64,7 @@ Dateinamen:
 - Gegner eingetragen: wütende Smileys.
 - Extras: keine.
 - Punkte: keine.
+- Aufgaben eingetragen: Laptop 1 Code, Laptop 2 Bilder.
 - Besondere Idee eingetragen: E-Taste friert den Fänger 3 Sekunden ein, nur einmal pro Spiel.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
