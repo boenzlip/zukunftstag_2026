@@ -91,3 +91,4 @@ Dateinamen:
 - Goldmünze: jede Runde liegt eine auf einer zufälligen Plattform. Wer sie einsammelt, springt 30 Sekunden lang doppelt so hoch.
 - Superhüpfer hält jetzt 30 Sekunden (statt bis Rundenende).
 - Portale: jede Runde erscheint auf den zwei gleichfarbigen Plattformen einer Farbe je ein Portal. Wer hineinläuft, wird zum anderen teleportiert.
+- Text unter der Zeit entfernt.

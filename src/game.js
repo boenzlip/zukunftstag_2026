@@ -409,13 +409,6 @@ function draw() {
   ctx.textAlign = "right";
   ctx.fillText(nm(1) + ": " + score1 + "   " + nm(2) + ": " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
   ctx.textAlign = "left";
-  ctx.font = "20px sans-serif";
-  const left = SWAP_EVERY - (rounds % SWAP_EVERY);
-  ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
-  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
-  ctx.fillText("Diese Runde bewegt sich: " + COLOR_NAMES[COLORS.indexOf(moveColor)] + " ↔", 16, 116);
-  if (boost1 > 0 || boost2 > 0) ctx.fillText("Goldmünze: " + nm(boost1 > 0 ? 1 : 2) + " springt doppelt so hoch! Noch " + Math.ceil(Math.max(boost1, boost2)) + " Sek.", 16, 168);
-  ctx.fillText("Portale verbinden die Plattformen in: " + COLOR_NAMES[COLORS.indexOf(portals[0].color)], 16, 142);
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
