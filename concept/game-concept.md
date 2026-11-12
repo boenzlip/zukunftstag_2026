@@ -16,7 +16,7 @@
 - Unsere Welt: Der Hintergrund sieht aus wie der Himmel. Die Map ist ein Raster, und ein Rasterfeld ist ein Block (wie in Minecraft). Die Map ist so groß wie der Bildschirm. Zwei Blöcke bilden eine Plattform, jede Plattform hat eine andere Farbe. Die Plattformen schweben in der Luft. Man muss von einer zur anderen kommen, auch hoch und runter.
 - Zeichenstil: Pixel
 - Gegner und Hindernisse: Wütende Smileys (sie fangen den Spieler)
-- Extras zum Sammeln:
+- Extras zum Sammeln: keine
 - Punkte bekommt man für:
 - Unsere besondere Idee:
 
@@ -62,5 +62,6 @@ Dateinamen:
 - Gefahren eingetragen: nur runterfallen und gefangen werden.
 - Zeichenstil eingetragen: Pixel.
 - Gegner eingetragen: wütende Smileys.
+- Extras: keine.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
