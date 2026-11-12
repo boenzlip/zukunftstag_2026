@@ -70,3 +70,4 @@ Dateinamen:
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
 - Einfrieren mit E-Taste eingebaut.
+- Fänger bewegt sich jetzt schlauer (zielt voraus, wechselt Tempo, macht Pausen).

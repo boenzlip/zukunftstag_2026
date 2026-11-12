@@ -22,13 +22,13 @@ function makeActor(x, y) {
   return { x, y, w: 36, h: 48, vx: 0, vy: 0, onGround: false };
 }
 
-let player, chaser, timeLeft, state, freezeLeft, freezeUsed; // state: "play" | "win" | "lose"
+let player, chaser, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
   player = makeActor(1.5 * BLOCK, 7 * BLOCK - 48);
   chaser = makeActor(13.5 * BLOCK, 7 * BLOCK - 48);
   timeLeft = GAME_TIME;
-  freezeLeft = 0; freezeUsed = false;
+  freezeLeft = 0; freezeUsed = false; chaserClock = 0;
   state = "play";
 }
 
@@ -68,12 +68,19 @@ function update(dt) {
   const frozen = freezeLeft > 0;
 
   // Fänger: laeuft zum Spieler und springt, wenn der Spieler hoeher ist oder eine Luecke kommt
-  const dx = (player.x + player.w / 2) - (chaser.x + chaser.w / 2);
-  chaser.vx = frozen ? 0 : Math.abs(dx) > 4 ? Math.sign(dx) * SPEED * 0.8 : 0;
+  // Der Fänger denkt voraus: er zielt dorthin, wo der Spieler gleich ist,
+  // wechselt sein Tempo und macht kleine Pausen, damit er nicht synchron laeuft.
+  chaserClock += dt;
+  const target = player.x + player.vx * 0.5;
+  const dx = target - chaser.x;
+  const pace = 0.55 + 0.45 * Math.abs(Math.sin(chaserClock * 1.3));
+  const pause = Math.sin(chaserClock * 0.7 + 1) > 0.9; // kurz stehen bleiben
+  chaser.vx = (frozen || pause || Math.abs(dx) < 6) ? 0 : Math.sign(dx) * SPEED * pace;
   if (chaser.onGround && !frozen) {
     const aheadX = chaser.x + chaser.w / 2 + Math.sign(dx) * 50;
     const groundAhead = platforms.some(p => aheadX > p.x && aheadX < p.x + p.w && Math.abs(p.y - (chaser.y + chaser.h)) < 2);
-    if (player.y < chaser.y - 20 || !groundAhead) chaser.vy = JUMP;
+    const playerAbove = player.y < chaser.y - 20;
+    if ((playerAbove && Math.abs(dx) < 240) || !groundAhead || Math.random() < 0.004) chaser.vy = JUMP;
   }
   physics(chaser, dt);
   if (chaser.y > canvas.height) { // Fänger gefallen -> neu auf eine Plattform setzen
