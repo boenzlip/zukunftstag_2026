@@ -190,6 +190,9 @@ function physics(a, dt) {
 // Runde zu Ende: who = 1 (Spieler 1), 2 (Spieler 2) oder 0 (keiner) bekommt einen Punkt.
 function endRound(who, text) {
   state = "end"; winner = text;
+  if (who === 1) { skin1 = "win"; skin2 = "lose"; }
+  else if (who === 2) { skin1 = "lose"; skin2 = "win"; }
+  else { skin1 = "win"; skin2 = "win"; }
   rounds++;
   if (who === 1) score1++;
   if (who === 2) score2++;
@@ -203,7 +206,7 @@ function update(dt) {
   if (state === "names") return;
   if (state !== "play") {
     if (keys["enter"] || keys[" "]) {
-      if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; }
+      if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; skin1 = "win"; skin2 = "win"; }
       reset();
     }
     return;
@@ -333,6 +336,28 @@ function update(dt) {
   else if (catcherOut) endRound(runnerN, "Fänger ist gefallen: Punkt für " + nm(runnerN) + "!");
   else if (runnerOut) endRound(catcherN, "Läufer ist gefallen: Punkt für " + nm(catcherN) + "!");
   else if (timeLeft <= 0) { timeLeft = 0; endRound(runnerN, "Zeit um: Punkt für " + nm(runnerN) + "!"); }
+}
+
+// Skins: Wer die letzte Runde gewonnen hat, bekommt den grinsenden Smiley,
+// wer verloren hat, den weinenden. (Bilder aus dem Ordner art/)
+const SKIN_SRC = { win: "art/skin_winner.png", lose: "art/skin_loser.png" };
+const skinImg = {};
+for (const k in SKIN_SRC) { skinImg[k] = new Image(); skinImg[k].src = SKIN_SRC[k]; }
+let skin1 = "win", skin2 = "win";       // am Anfang haben beide den grinsenden Smiley
+
+// Figur mit Skin: Bild als Kopf, Ring in der Rollenfarbe (gelb = Faenger, gruen = Laeufer), dazu Beine.
+function drawSkinned(a, ringColor, skin, angry) {
+  const img = skinImg[skin];
+  if (!img || !img.complete || !img.naturalWidth) return drawSmiley(a, ringColor, angry);
+  const cx = a.x + a.w / 2, cy = a.y + 19;
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy + 19); ctx.lineTo(cx - 10, a.y + a.h);
+  ctx.moveTo(cx + 8, cy + 19); ctx.lineTo(cx + 10, a.y + a.h);
+  ctx.stroke();
+  ctx.strokeStyle = ringColor; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.stroke();
+  ctx.drawImage(img, cx - 19, cy - 19, 38, 38);
 }
 
 function drawSmiley(a, color, angry) {
@@ -467,8 +492,8 @@ function draw() {
   }
   const cn = catcherIs1();
   const catcherColor = freezeLeft > 0 ? "#8fd9ff" : "#ffe135";
-  drawSmiley(player, cn ? catcherColor : "#7ee081", cn);
-  drawSmiley(player2, cn ? "#7ee081" : catcherColor, !cn);
+  drawSkinned(player, cn ? catcherColor : "#7ee081", skin1, cn);
+  drawSkinned(player2, cn ? "#7ee081" : catcherColor, skin2, !cn);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.textAlign = "right";
