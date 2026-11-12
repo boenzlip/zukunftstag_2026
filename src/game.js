@@ -129,6 +129,58 @@ function drawSmiley(a, color, angry) {
   ctx.stroke();
 }
 
+
+// Hintergrund: Feuerkrater in der Wueste (nach dem Foto der Kinder)
+const flames = [];
+(function () {
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++) {
+    const ang = rnd() * Math.PI * 2, ring = 0.55 + rnd() * 0.4;
+    flames.push({ ang, ring, h: 14 + rnd() * 34, w: 6 + rnd() * 10, ph: rnd() * 10 });
+  }
+})();
+
+function drawBackground(t) {
+  // Himmel und Wueste
+  let g = ctx.createLinearGradient(0, 0, 0, 110);
+  g.addColorStop(0, "#4d78a8"); g.addColorStop(1, "#c8b9a3");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);
+  ctx.fillStyle = "#8a6f5a"; // ferner Huegel
+  ctx.beginPath(); ctx.moveTo(820, 90); ctx.lineTo(880, 62); ctx.lineTo(980, 62); ctx.lineTo(1060, 90); ctx.fill();
+  ctx.fillStyle = "#b9b2a8"; ctx.fillRect(0, 90, W, H - 90);
+  // Krater
+  const cx = W / 2, cy = 380, rx = 570, ry = 280;
+  g = ctx.createRadialGradient(cx, cy + 40, 20, cx, cy, rx);
+  g.addColorStop(0, "#b4521f"); g.addColorStop(0.6, "#7d3a22"); g.addColorStop(1, "#3e2018");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  // Feuer am Rand und im Krater
+  for (const f of flames) {
+    const x = cx + Math.cos(f.ang) * rx * f.ring;
+    const y = cy + Math.sin(f.ang) * ry * f.ring;
+    const h = f.h * (0.7 + 0.3 * Math.sin(t * 6 + f.ph));
+    ctx.fillStyle = "#ff7a1a";
+    ctx.beginPath(); ctx.moveTo(x - f.w / 2, y);
+    ctx.quadraticCurveTo(x - f.w / 4, y - h * 0.5, x, y - h);
+    ctx.quadraticCurveTo(x + f.w / 4, y - h * 0.5, x + f.w / 2, y); ctx.fill();
+    ctx.fillStyle = "#ffd34d";
+    ctx.beginPath(); ctx.moveTo(x - f.w / 4, y);
+    ctx.quadraticCurveTo(x, y - h * 0.6, x + f.w / 4, y); ctx.fill();
+  }
+  // grosses Feuer unten
+  const fh = 70 + 12 * Math.sin(t * 7);
+  ctx.fillStyle = "#ff8a1a";
+  const bx = cx - 95, by = cy + 200;
+  ctx.beginPath(); ctx.moveTo(bx - 45, by);
+  ctx.quadraticCurveTo(bx - 40, by - fh * 0.6, bx, by - fh * 1.3);
+  ctx.quadraticCurveTo(bx + 40, by - fh * 0.6, bx + 45, by); ctx.fill();
+  ctx.fillStyle = "#ffd34d";
+  ctx.beginPath(); ctx.moveTo(bx - 18, by);
+  ctx.quadraticCurveTo(bx - 14, by - fh * 0.4, bx, by - fh * 0.8);
+  ctx.quadraticCurveTo(bx + 14, by - fh * 0.4, bx + 18, by); ctx.fill();
+}
+
 function bigText(text, sub) {
   ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#fff"; ctx.textAlign = "center";
@@ -138,7 +190,7 @@ function bigText(text, sub) {
 
 function draw() {
   ctx.setTransform(MAP_SCALE, 0, 0, MAP_SCALE, 0, 0);
-  ctx.fillStyle = "#87ceeb"; ctx.fillRect(0, 0, W, H); // Himmel
+  drawBackground(performance.now() / 1000);
   for (const p of platforms) {
     for (let i = 0; i < 2; i++) { // 2 Bloecke pro Plattform
       ctx.fillStyle = p.color; ctx.fillRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);

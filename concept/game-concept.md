@@ -76,3 +76,4 @@ Dateinamen:
 - Map 25% groesser gemacht (MAP_SCALE = 1.25).
 - Blockraster kleiner (40px, 30x17 Bloecke) und mehr Plattformen (14).
 - Decke eingebaut: man kann oben nicht mehr rausspringen.
+- Hintergrund: Feuerkrater in der Wueste (nach Foto der Kinder).
