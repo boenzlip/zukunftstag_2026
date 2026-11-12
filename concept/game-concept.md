@@ -103,3 +103,4 @@ Dateinamen:
 - Emoji-Auswahl nach den Namen: 10 lustige Pixel-Emojis (Grinser, Zunge raus, Cool, Herzaugen, Lachtränen, Schock, Müde, Streber, Alien, Clown). Jedes Emoji kann nur einmal pro Spiel gewählt werden. Der Ring zeigt die Rolle (gelb = Fänger, grün = Läufer).
 - R-Taste: startet das ganze Spiel von vorn (Namen, Emojis, Punkte).
 - Hintergrund: dunkle Wolken ziehen langsam vorbei und es regnet (über dem Feuerkrater).
+- Feuerkrater-Hintergrund entfernt: jetzt nur Gewitterhimmel mit ziehenden Wolken und Regen. Zeit und Punkte sind weiß.
