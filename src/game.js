@@ -12,13 +12,23 @@ const GAME_TIME = 60;          // Sekunden
 const GRAVITY = 1800, JUMP = -780, SPEED = 260;
 
 // Jede Plattform = 2 Bloecke, jede mit eigener Farbe: [Spalte, Zeile, Farbe]
-const platforms = [
+const BASE_LAYOUT = [
   [2, 15, "#e74c3c"], [13, 15, "#f1c40f"], [25, 15, "#2ecc71"],
   [7, 12, "#3498db"], [19, 12, "#e67e22"],
   [3, 9, "#9b59b6"], [12, 9, "#1abc9c"], [22, 9, "#e84393"],
   [8, 6, "#f39c12"], [17, 6, "#16a085"], [27, 6, "#c0392b"],
   [4, 3, "#2980b9"], [13, 3, "#8e44ad"], [23, 3, "#27ae60"],
-].map(([c, r, color]) => ({ x: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color }));
+]
+
+// Jede Runde verschieben sich die Plattformen: Spalte um -1, 0 oder +1.
+let platforms = [];
+function shufflePlatforms() {
+  platforms = BASE_LAYOUT.map(([c, r, color]) => {
+    const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 3) - 1));
+    return { x: col * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color };
+  });
+}
+shufflePlatforms();
 
 const keys = {};
 addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault(); });
@@ -31,8 +41,9 @@ function makeActor(x, y) {
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
-  player = makeActor(2.5 * BLOCK, 15 * BLOCK - 48);
-  player2 = makeActor(26.5 * BLOCK, 15 * BLOCK - 48);
+  shufflePlatforms();
+  player = makeActor(platforms[0].x + BLOCK - 18, platforms[0].y - 48);
+  player2 = makeActor(platforms[2].x + BLOCK - 18, platforms[2].y - 48);
   winner = "";
   chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
