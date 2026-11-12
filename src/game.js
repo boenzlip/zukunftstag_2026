@@ -22,12 +22,13 @@ function makeActor(x, y) {
   return { x, y, w: 36, h: 48, vx: 0, vy: 0, onGround: false };
 }
 
-let player, chaser, timeLeft, state; // state: "play" | "win" | "lose"
+let player, chaser, timeLeft, state, freezeLeft, freezeUsed; // state: "play" | "win" | "lose"
 
 function reset() {
   player = makeActor(1.5 * BLOCK, 7 * BLOCK - 48);
   chaser = makeActor(13.5 * BLOCK, 7 * BLOCK - 48);
   timeLeft = GAME_TIME;
+  freezeLeft = 0; freezeUsed = false;
   state = "play";
 }
 
@@ -61,10 +62,15 @@ function update(dt) {
   if (keys["w"] && player.onGround) player.vy = JUMP;
   physics(player, dt);
 
+  // E: Fänger 3 Sekunden einfrieren (nur einmal pro Spiel)
+  if (keys["e"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
+  if (freezeLeft > 0) freezeLeft -= dt;
+  const frozen = freezeLeft > 0;
+
   // Fänger: laeuft zum Spieler und springt, wenn der Spieler hoeher ist oder eine Luecke kommt
   const dx = (player.x + player.w / 2) - (chaser.x + chaser.w / 2);
-  chaser.vx = Math.abs(dx) > 4 ? Math.sign(dx) * SPEED * 0.8 : 0;
-  if (chaser.onGround) {
+  chaser.vx = frozen ? 0 : Math.abs(dx) > 4 ? Math.sign(dx) * SPEED * 0.8 : 0;
+  if (chaser.onGround && !frozen) {
     const aheadX = chaser.x + chaser.w / 2 + Math.sign(dx) * 50;
     const groundAhead = platforms.some(p => aheadX > p.x && aheadX < p.x + p.w && Math.abs(p.y - (chaser.y + chaser.h)) < 2);
     if (player.y < chaser.y - 20 || !groundAhead) chaser.vy = JUMP;
@@ -122,10 +128,12 @@ function draw() {
       ctx.strokeRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
     }
   }
-  drawSmiley(chaser, "#e74c3c", true);
+  drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
   drawSmiley(player, "#ffe135", false);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
+  ctx.font = "20px sans-serif";
+  ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Eingefroren!" : "Einfrieren benutzt") : "E = Fänger einfrieren (1x)", 16, 64);
   if (state === "win") bigText("GEWONNEN! 🏆", "Enter = nochmal");
   if (state === "lose") bigText("VERLOREN", "Enter = nochmal");
 }
