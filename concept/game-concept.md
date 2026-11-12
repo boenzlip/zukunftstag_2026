@@ -105,3 +105,4 @@ Dateinamen:
 - Hintergrund: dunkle Wolken ziehen langsam vorbei und es regnet (über dem Feuerkrater).
 - Feuerkrater-Hintergrund entfernt: jetzt nur Gewitterhimmel mit ziehenden Wolken und Regen. Zeit und Punkte sind weiß.
 - Der Fänger trägt einen roten Hut (auch nach dem Rollenwechsel).
+- Emoji-Auswahl: Es gibt jetzt 22 Pixel-Emojis. Bei jeder Auswahl werden 10 zufällige davon gezeigt (jedes nur einmal wählbar).

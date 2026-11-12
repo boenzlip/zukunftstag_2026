@@ -90,7 +90,7 @@ const nm = n => names[n - 1] || ("Spieler " + n);
 
 addEventListener("keydown", e => {
   if (state === "names") { // Namen eintippen
-    if (e.key === "Enter") { if (++nameStep > 1) { state = "pick"; pickStep = 0; cursor = 0; } }
+    if (e.key === "Enter") { if (++nameStep > 1) { state = "pick"; pickStep = 0; cursor = 0; newChoices(); } }
     else if (e.key === "Backspace") names[nameStep] = names[nameStep].slice(0, -1);
     else if (e.key.length === 1 && names[nameStep].length < 12) names[nameStep] += e.key;
     e.preventDefault();
@@ -122,11 +122,18 @@ function fullRestart() {
 
 // Emoji-Auswahl: erst Spieler 1, dann Spieler 2. Jedes Emoji nur einmal!
 let pickStep = 0, cursor = 0;
-function takenBy(i) { return pickStep >= 1 && emoji1 === i ? 1 : 0; }
+// Bei jeder Auswahl kommen 10 andere Emojis aus dem grossen Vorrat (zufaellig gemischt).
+let choices = [];
+function newChoices() {
+  const pool = EMOJI_DEFS.map((d, i) => i);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  choices = pool.slice(0, 10);
+}
+function takenBy(i) { return pickStep >= 1 && emoji1 === choices[i] ? 1 : 0; }
 function choose(i) {
   if (takenBy(i)) return;                  // schon vergeben
-  if (pickStep === 0) { emoji1 = i; pickStep = 1; cursor = (i + 1) % 10; }
-  else { emoji2 = i; reset(); }
+  if (pickStep === 0) { emoji1 = choices[i]; pickStep = 1; cursor = (i + 1) % 10; }
+  else { emoji2 = choices[i]; reset(); }
 }
 const CELL = { w: 150, h: 170, x0: (W - 5 * 150) / 2, y0: 210 };   // Gitter 5 x 2
 canvas.addEventListener("click", e => {
@@ -375,7 +382,8 @@ function update(dt) {
 
 // Pixel-Emojis (12 x 12). Jeder Spieler waehlt eins; jedes Emoji gibt es nur einmal pro Spiel.
 // Zeichen: O = Rand, Y = gelb, W = weiss, B = schwarz, R = rot, L = blau, G = gruen, P = rosa, . = nichts aendern
-const EMOJI_COLORS = { O: "#5a3a00", Y: "#ffd23f", W: "#ffffff", B: "#1b1b1b", R: "#e63946", L: "#4dabf7", G: "#6cc24a", P: "#ff8fab" };
+const EMOJI_COLORS = { O: "#5a3a00", Y: "#ffd23f", W: "#ffffff", B: "#1b1b1b", R: "#e63946", L: "#4dabf7", G: "#6cc24a", P: "#ff8fab",
+  C: "#66d9e8", V: "#b197fc", N: "#ff922b", S: "#ced4da", D: "#6b3f12" };
 const EMOJI_BASE = [
   "...OOOOOO...", ".OOYYYYYYOO.", ".OYYYYYYYYO.", "OYYYYYYYYYYO", "OYYYYYYYYYYO", "OYYYYYYYYYYO",
   "OYYYYYYYYYYO", "OYYYYYYYYYYO", "OYYYYYYYYYYO", ".OYYYYYYYYO.", ".OOYYYYYYOO.", "...OOOOOO...",
@@ -392,12 +400,25 @@ const EMOJI_DEFS = [
   { name: "Streber",     patch: [".BBBB..BBBB.", ".BWWBBBBWWB.", ".BBBB..BBBB.", "............", "...BBBBBB...", "....BWWB....", "............"] },
   { name: "Alien", base: "G", patch: [".BBB....BBB.", "..BBB..BBB..", "...BB..BB...", "............", "............", "....BBBB....", "............"] },
   { name: "Clown", base: "W", patch: ["LL........LL", "...BB..BB...", ".....RR.....", ".....RR.....", "............", "..RRRRRRRR..", "............"] },
+  { name: "Wütend", base: "R", patch: ["..B......B..", "...BB..BB...", "...BB..BB...", "............", "............", "...BBBBBB...", "..B......B.."] },
+  { name: "Kuss", patch: ["............", "..BB....BB..", "............", ".PP......PP.", "....RRRR....", "....RRRR....", "............"] },
+  { name: "Traurig", patch: ["............", "...BB..BB...", "...BB..BB...", "...L....L...", "............", "....BBBB....", "...B....B..."] },
+  { name: "Roboter", base: "S", patch: ["..LLL..LLL..", "..LBL..LBL..", "..LLL..LLL..", "............", "..BBBBBBBB..", "..BWBWBWBW..", "..BBBBBBBB.."] },
+  { name: "Katze", base: "N", patch: ["..GG....GG..", "..GB....BG..", "............", "BB...PP...BB", "....B..B....", ".....BB.....", "............"] },
+  { name: "Pirat", extra: [[1, ".OORRRRRROO."], [2, ".ORRRRRRRRO."]], patch: ["...B....B...", ".BBBB..BB...", ".BBBB.......", "............", "............", "...BBBBBB...", "............"] },
+  { name: "Geist", base: "W", patch: ["............", "..BB....BB..", "..BB....BB..", "............", "....B..B....", "....BBBB....", "............"] },
+  { name: "Sternchen", patch: ["..N.N..N.N..", "..NNN..NNN..", "...N....N...", "............", "..BBBBBBBB..", "...BWWWWB...", "............"] },
+  { name: "Monster", base: "V", patch: [".....WW.....", "....WBBW....", ".....WW.....", "............", "..BBBBBBBB..", "..BWBWBWBW..", "....BBBB...."] },
+  { name: "Frost", base: "C", patch: ["............", "...BB..BB...", "...BB..BB...", "............", "..B.B.B.B.B.", "..BBBBBBBB..", "............"] },
+  { name: "Schnurrbart", patch: ["............", "...BB..BB...", "............", "..DDDDDDDD..", "...DDDDDD...", "....BBBB....", "............"] },
+  { name: "Nervös", patch: ["..........L.", "...BB..BB...", "...BB..BB...", "..........L.", "..B.BB.BB.B.", "...B..BB.B..", "............"] },
 ];
 // Jedes Emoji einmal in eine Liste von farbigen Punkten umrechnen
 const EMOJI_PIXELS = EMOJI_DEFS.map(def => {
   const rows = EMOJI_BASE.map(r => r.split(""));
   const base = def.base || "Y";
   rows.forEach((r, y) => r.forEach((c, x) => { if (c === "Y") rows[y][x] = base; }));
+  (def.extra || []).forEach(([y, line]) => line.split("").forEach((c, x) => { if (c !== ".") rows[y][x] = c; }));
   def.patch.forEach((line, i) => line.split("").forEach((c, x) => { if (c !== ".") rows[3 + i][x] = c; }));
   const px = [];
   rows.forEach((r, y) => r.forEach((c, x) => { if (c !== ".") px.push([x, y, EMOJI_COLORS[c] || EMOJI_COLORS.Y]); }));
@@ -575,9 +596,9 @@ function draw() {
       ctx.fillStyle = i === cursor ? "rgba(255,215,0,0.35)" : "rgba(255,255,255,0.08)";
       ctx.fillRect(x + 8, y + 8, CELL.w - 16, CELL.h - 16);
       if (i === cursor) { ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 4; ctx.strokeRect(x + 8, y + 8, CELL.w - 16, CELL.h - 16); }
-      ctx.globalAlpha = taken ? 0.25 : 1; drawEmoji(i, x + CELL.w / 2 - 48, y + 22, 96); ctx.globalAlpha = 1;
+      ctx.globalAlpha = taken ? 0.25 : 1; drawEmoji(choices[i], x + CELL.w / 2 - 48, y + 22, 96); ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff"; ctx.font = "18px sans-serif";
-      ctx.fillText(taken ? "vergeben: " + nm(taken) : EMOJI_DEFS[i].name, x + CELL.w / 2, y + 144);
+      ctx.fillText(taken ? "vergeben: " + nm(taken) : EMOJI_DEFS[choices[i]].name, x + CELL.w / 2, y + 144);
     }
     ctx.textAlign = "left";
   }
