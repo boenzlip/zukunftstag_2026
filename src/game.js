@@ -350,7 +350,7 @@ function drawSkinned(a, ringColor, skin, angry) {
   const img = skinImg[skin];
   if (!img || !img.complete || !img.naturalWidth) return drawSmiley(a, ringColor, angry);
   const cx = a.x + a.w / 2, cy = a.y + 19;
-  ctx.strokeStyle = "#000"; ctx.lineWidth = 4;
+  ctx.strokeStyle = angry ? "#e00000" : "#000"; ctx.lineWidth = 4;   // Faenger hat rote Beine
   ctx.beginPath();
   ctx.moveTo(cx - 8, cy + 19); ctx.lineTo(cx - 10, a.y + a.h);
   ctx.moveTo(cx + 8, cy + 19); ctx.lineTo(cx + 10, a.y + a.h);
