@@ -54,6 +54,7 @@ function physics(a, dt) {
     }
   }
   a.x = Math.max(0, Math.min(W - a.w, a.x));
+  if (a.y < 0) { a.y = 0; a.vy = 0; } // oben ist eine Decke
 }
 
 function update(dt) {

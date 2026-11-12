@@ -75,3 +75,4 @@ Dateinamen:
 - Fänger vorerst aus dem Spiel genommen (CHASER_ON = false in src/game.js).
 - Map 25% groesser gemacht (MAP_SCALE = 1.25).
 - Blockraster kleiner (40px, 30x17 Bloecke) und mehr Plattformen (14).
+- Decke eingebaut: man kann oben nicht mehr rausspringen.
