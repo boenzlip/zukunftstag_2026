@@ -18,11 +18,16 @@ const BASE_LAYOUT = [[15, ROW_A], [12, ROW_B], [9, ROW_A], [6, ROW_B], [3, ROW_A
   .flatMap(([r, cols]) => cols.map(c => [c, r]))
   .map(([c, r], i) => [c, r, COLORS[i % COLORS.length]]);
 
+const PINK = "#e84393";
+const MOVE_RANGE = 60;         // wie weit sie nach links/rechts wandern (Pixel)
+const MOVE_SPEED = 0.6;        // langsam: etwa 36 Pixel pro Sekunde
+
 function randomPlatforms() {
   return BASE_LAYOUT.map(([c, r, color]) => {
     const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 5) - 2));
     const row = Math.max(2, Math.min(15, r + Math.floor(Math.random() * 3) - 1));
-    return { x: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color };
+    const moving = color === PINK;   // pinke Plattformen bewegen sich langsam links/rechts
+    return { x: col * BLOCK, baseX: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving };
   });
 }
 
@@ -39,7 +44,7 @@ function canReach(a, b) {
 
 // Von JEDER Plattform aus muss man ALLE anderen erreichen koennen,
 // also gibt es immer eine Plattform, auf die man springen kann.
-function allReachable(list) {
+function allReachableAt(list) {
   for (let start = 0; start < list.length; start++) {
     const seen = new Set([start]), todo = [start];
     while (todo.length) {
@@ -51,12 +56,24 @@ function allReachable(list) {
   return true;
 }
 
+// Auch wenn sich die pinken Plattformen ganz links oder ganz rechts befinden,
+// muss alles erreichbar bleiben.
+function allReachable(list) {
+  const movers = list.map((p, i) => p.moving ? i : -1).filter(i => i >= 0);
+  for (let mask = 0; mask < (1 << movers.length); mask++) {
+    const test = list.map(p => ({ ...p }));
+    movers.forEach((idx, k) => { test[idx].x = test[idx].baseX + ((mask >> k) & 1 ? MOVE_RANGE : -MOVE_RANGE); });
+    if (!allReachableAt(test)) return false;
+  }
+  return true;
+}
+
 function shufflePlatforms() {
   for (let i = 0; i < 500; i++) {
     const list = randomPlatforms();
     if (allReachable(list)) { platforms = list; return; }
   }
-  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color }));
+  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, baseX: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving: color === PINK }));
 }
 shufflePlatforms();
 
@@ -106,13 +123,13 @@ function physics(a, dt) {
   a.x += a.vx * dt;
   const prevBottom = a.y + a.h;
   a.y += a.vy * dt;
-  a.onGround = false;
+  a.onGround = false; a.standingOn = null;
   // Plattformen sind von oben fest: man landet nur, wenn man von oben kommt.
   if (a.vy >= 0) {
     for (const p of platforms) {
       const overlapX = a.x + a.w > p.x && a.x < p.x + p.w;
       if (overlapX && prevBottom <= p.y + 1 && a.y + a.h >= p.y) {
-        a.y = p.y - a.h; a.vy = 0; a.onGround = true;
+        a.y = p.y - a.h; a.vy = 0; a.onGround = true; a.standingOn = p;
       }
     }
   }
@@ -142,6 +159,14 @@ function update(dt) {
     return;
   }
   timeLeft -= dt;
+
+  // Pinke Plattformen wandern langsam hin und her und nehmen Spieler mit.
+  for (const p of platforms) {
+    if (!p.moving) continue;
+    const oldX = p.x;
+    p.x = p.baseX + MOVE_RANGE * Math.sin((GAME_TIME - timeLeft) * MOVE_SPEED);
+    for (const a of [player, player2]) if (a.standingOn === p) a.x += p.x - oldX;
+  }
 
   // Faenger = gelb, Laeufer = gruen. Der Laeufer kann den Faenger 3 Sekunden einfrieren (1x pro Runde):
   // Spieler 1 mit S, Spieler 2 mit Pfeil runter.
