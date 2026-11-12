@@ -463,11 +463,44 @@ const flames = [];
   }
 })();
 
+// Wolken (ziehen langsam nach rechts) und Regen
+const clouds = [], drops = [];
+(function () {
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 7; i++) clouds.push({ x: rnd() * 1400, y: 8 + rnd() * 50, s: 0.8 + rnd() * 0.9, v: 12 + rnd() * 22 });
+  for (let i = 0; i < 160; i++) drops.push({ x: rnd() * 1400, y: rnd() * 800, len: 10 + rnd() * 12, v: 600 + rnd() * 300 });
+})();
+
+function drawCloud(c, t) {
+  const x = ((c.x + t * c.v) % 1500) - 150, y = c.y, s = c.s;
+  ctx.fillStyle = "#6e7686";
+  for (const [dx, dy, r] of [[0, 14, 22], [26, 4, 28], [58, 12, 24], [84, 18, 18], [-20, 20, 16]]) {
+    ctx.beginPath(); ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = "#8d96a6"; // hellere Oberseite
+  for (const [dx, dy, r] of [[26, -2, 18], [58, 6, 14]]) {
+    ctx.beginPath(); ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawRain(t) {
+  ctx.strokeStyle = "rgba(190,215,255,0.55)"; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (const d of drops) {
+    const y = (d.y + t * d.v) % (H + 40) - 20;
+    const x = ((d.x - t * 90 - y * 0.15) % (W + 60) + W + 60) % (W + 60) - 30;   // leicht schraeg
+    ctx.moveTo(x, y); ctx.lineTo(x - 3, y + d.len);
+  }
+  ctx.stroke();
+}
+
 function drawBackground(t) {
   // Himmel und Wueste
   let g = ctx.createLinearGradient(0, 0, 0, 110);
-  g.addColorStop(0, "#4d78a8"); g.addColorStop(1, "#c8b9a3");
+  g.addColorStop(0, "#3d5775"); g.addColorStop(1, "#a9a39a");
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);
+  for (const c of clouds) drawCloud(c, t);
   ctx.fillStyle = "#8a6f5a"; // ferner Huegel
   ctx.beginPath(); ctx.moveTo(820, 90); ctx.lineTo(880, 62); ctx.lineTo(980, 62); ctx.lineTo(1060, 90); ctx.fill();
   ctx.fillStyle = "#b9b2a8"; ctx.fillRect(0, 90, W, H - 90);
@@ -501,6 +534,7 @@ function drawBackground(t) {
   ctx.beginPath(); ctx.moveTo(bx - 18, by);
   ctx.quadraticCurveTo(bx - 14, by - fh * 0.4, bx, by - fh * 0.8);
   ctx.quadraticCurveTo(bx + 14, by - fh * 0.4, bx + 18, by); ctx.fill();
+  drawRain(t);
 }
 
 function bigText(text, sub) {

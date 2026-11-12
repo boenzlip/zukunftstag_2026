@@ -102,3 +102,4 @@ Dateinamen:
 - Skins wieder ausgeschaltet: zurück zu den alten gemalten Smileys (gelb/grün). Die Skin-Bilder bleiben in art/ (USE_SKINS = true in src/game.js schaltet sie wieder an). Fänger hat rote Beine.
 - Emoji-Auswahl nach den Namen: 10 lustige Pixel-Emojis (Grinser, Zunge raus, Cool, Herzaugen, Lachtränen, Schock, Müde, Streber, Alien, Clown). Jedes Emoji kann nur einmal pro Spiel gewählt werden. Der Ring zeigt die Rolle (gelb = Fänger, grün = Läufer).
 - R-Taste: startet das ganze Spiel von vorn (Namen, Emojis, Punkte).
+- Hintergrund: dunkle Wolken ziehen langsam vorbei und es regnet (über dem Feuerkrater).
