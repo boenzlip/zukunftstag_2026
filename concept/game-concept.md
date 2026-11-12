@@ -99,3 +99,4 @@ Dateinamen:
 - Portale verbessert: Man kann jetzt leichter wieder zurück. Man ist schon nach einem kurzen Schritt (16 px) aus dem Portal heraus und kann es erneut benutzen.
 - Neue Skins (Bilder von den Kindern): Wer die letzte Runde gewonnen hat, bekommt den grinsenden Smiley, wer verloren hat den weinenden. Ein Ring zeigt die Rolle (gelb = Fänger, grün = Läufer).
 - Der Fänger hat rote Beine.
+- Skins wieder ausgeschaltet: zurück zu den alten gemalten Smileys (gelb/grün). Die Skin-Bilder bleiben in art/ (USE_SKINS = true in src/game.js schaltet sie wieder an). Fänger hat rote Beine.

@@ -340,6 +340,7 @@ function update(dt) {
 
 // Skins: Wer die letzte Runde gewonnen hat, bekommt den grinsenden Smiley,
 // wer verloren hat, den weinenden. (Bilder aus dem Ordner art/)
+const USE_SKINS = false;       // true = Bilder-Skins (grinsend/weinend), false = gemalte gelbe/gruene Smileys
 const SKIN_SRC = { win: "art/skin_winner.png", lose: "art/skin_loser.png" };
 const skinImg = {};
 for (const k in SKIN_SRC) { skinImg[k] = new Image(); skinImg[k].src = SKIN_SRC[k]; }
@@ -348,7 +349,7 @@ let skin1 = "win", skin2 = "win";       // am Anfang haben beide den grinsenden 
 // Figur mit Skin: Bild als Kopf, Ring in der Rollenfarbe (gelb = Faenger, gruen = Laeufer), dazu Beine.
 function drawSkinned(a, ringColor, skin, angry) {
   const img = skinImg[skin];
-  if (!img || !img.complete || !img.naturalWidth) return drawSmiley(a, ringColor, angry);
+  if (!USE_SKINS || !img || !img.complete || !img.naturalWidth) return drawSmiley(a, ringColor, angry);
   const cx = a.x + a.w / 2, cy = a.y + 19;
   ctx.strokeStyle = angry ? "#e00000" : "#000"; ctx.lineWidth = 4;   // Faenger hat rote Beine
   ctx.beginPath();
@@ -362,14 +363,14 @@ function drawSkinned(a, ringColor, skin, angry) {
 
 function drawSmiley(a, color, angry) {
   const cx = a.x + a.w / 2, r = 18, cy = a.y + r;
-  // Beine
-  ctx.strokeStyle = "#000"; ctx.lineWidth = 4;
+  // Beine (Faenger = rot)
+  ctx.strokeStyle = angry ? "#e00000" : "#000"; ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(cx - 8, cy + r); ctx.lineTo(cx - 10, a.y + a.h);
   ctx.moveTo(cx + 8, cy + r); ctx.lineTo(cx + 10, a.y + a.h);
   ctx.stroke();
   // Kopf
-  ctx.fillStyle = color;
+  ctx.strokeStyle = "#000"; ctx.fillStyle = color;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   // Augen
   ctx.fillStyle = "#000";
