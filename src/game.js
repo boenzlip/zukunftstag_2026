@@ -28,10 +28,12 @@ function makeActor(x, y) {
   return { x, y, w: 36, h: 48, vx: 0, vy: 0, onGround: false };
 }
 
-let player, chaser, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
+let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
   player = makeActor(2.5 * BLOCK, 15 * BLOCK - 48);
+  player2 = makeActor(26.5 * BLOCK, 15 * BLOCK - 48);
+  winner = "";
   chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
@@ -69,6 +71,11 @@ function update(dt) {
   if (keys["w"] && player.onGround) player.vy = JUMP;
   physics(player, dt);
 
+  // Spieler 2: Pfeiltasten (hoch = springen)
+  player2.vx = ((keys["arrowright"] ? 1 : 0) - (keys["arrowleft"] ? 1 : 0)) * SPEED;
+  if (keys["arrowup"] && player2.onGround) player2.vy = JUMP;
+  physics(player2, dt);
+
   if (CHASER_ON) {
   // E: Fänger 3 Sekunden einfrieren (nur einmal pro Spiel)
   if (keys["e"] && !freezeUsed) { freezeUsed = true; freezeLeft = 3; }
@@ -100,8 +107,11 @@ function update(dt) {
   // Verlieren: runtergefallen oder gefangen
   const caught = CHASER_ON && player.x < chaser.x + chaser.w && player.x + player.w > chaser.x &&
                  player.y < chaser.y + chaser.h && player.y + player.h > chaser.y;
-  if (player.y > H || caught) state = "lose";
-  else if (timeLeft <= 0) { timeLeft = 0; state = "win"; }
+  const p1Out = player.y > H || caught, p2Out = player2.y > H;
+  if (p1Out && p2Out) { state = "end"; winner = "Unentschieden!"; }
+  else if (p1Out) { state = "end"; winner = "Spieler 2 gewinnt!"; }
+  else if (p2Out) { state = "end"; winner = "Spieler 1 gewinnt!"; }
+  else if (timeLeft <= 0) { timeLeft = 0; state = "end"; winner = "Zeit um: beide gewinnen!"; }
 }
 
 function drawSmiley(a, color, angry) {
@@ -200,12 +210,12 @@ function draw() {
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
   drawSmiley(player, "#ffe135", false);
+  drawSmiley(player2, "#7ee081", false);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.font = "20px sans-serif";
   if (CHASER_ON) ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Eingefroren!" : "Einfrieren benutzt") : "E = Fänger einfrieren (1x)", 16, 64);
-  if (state === "win") bigText("GEWONNEN! 🏆", "Enter = nochmal");
-  if (state === "lose") bigText("VERLOREN", "Enter = nochmal");
+  if (state === "end") bigText(winner, "Enter = nochmal");
 }
 
 let last = performance.now();
