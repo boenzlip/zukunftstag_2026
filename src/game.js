@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 
 const MAP_SCALE = 1.25;        // Map ist 25% groesser
 const W = 960, H = 540;        // Spielwelt (intern)
-W = W * MAP_SCALE; H = H * MAP_SCALE;
+canvas.width = W * MAP_SCALE; canvas.height = H * MAP_SCALE;
 const BLOCK = 60;
 const COLS = 16, ROWS = 9;
 const CHASER_ON = false;       // Fänger an/aus (true = Fänger ist im Spiel)
