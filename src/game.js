@@ -110,6 +110,11 @@ const SWAP_EVERY = 5;          // Alle 5 Runden tauschen Faenger (gelb) und Laeu
 let rounds = 0;                // gespielte Runden
 // Spieler 1 = W/A/D (player), Spieler 2 = Pfeiltasten (player2)
 const catcherIs1 = () => Math.floor(rounds / SWAP_EVERY) % 2 === 0;
+// Goldene Muenze: liegt jede Runde auf einer zufaelligen Plattform.
+// Wer sie einsammelt, springt fuer den Rest der Runde doppelt so hoch.
+const SUPER_JUMP = JUMP * Math.SQRT2;   // doppelte Sprunghoehe = Startgeschwindigkeit x Wurzel 2
+let coin = null, boost1 = false, boost2 = false;
+
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
@@ -120,6 +125,10 @@ function reset() {
   chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
+  boost1 = false; boost2 = false;
+  // Muenze auf eine zufaellige Plattform (nicht die Startplattformen)
+  const spots = platforms.filter((p, i) => i !== 0 && i !== 2);
+  coin = { plat: spots[Math.floor(Math.random() * spots.length)], taken: false };
   state = "play";
 }
 
@@ -165,6 +174,14 @@ function update(dt) {
   }
   timeLeft -= dt;
 
+  // Muenze einsammeln
+  if (coin && !coin.taken) {
+    const cx = coin.plat.x + coin.plat.w / 2, cy = coin.plat.y - 16;
+    const touch = a => a.x < cx + 14 && a.x + a.w > cx - 14 && a.y < cy + 14 && a.y + a.h > cy - 14;
+    if (touch(player)) { coin.taken = true; boost1 = true; }
+    else if (touch(player2)) { coin.taken = true; boost2 = true; }
+  }
+
   // Plattformen in der Rundenfarbe wandern langsam hin und her und nehmen Spieler mit.
   for (const p of platforms) {
     if (!p.moving) continue;
@@ -183,12 +200,12 @@ function update(dt) {
   // Spieler 1: W springen, A links, D rechts
   const f1 = frozen && c1, f2 = frozen && !c1;
   player.vx = f1 ? 0 : ((keys["d"] ? 1 : 0) - (keys["a"] ? 1 : 0)) * SPEED;
-  if (keys["w"] && player.onGround && !f1) player.vy = JUMP;
+  if (keys["w"] && player.onGround && !f1) player.vy = boost1 ? SUPER_JUMP : JUMP;
   physics(player, dt);
 
   // Spieler 2: Pfeiltasten (hoch = springen)
   player2.vx = f2 ? 0 : ((keys["arrowright"] ? 1 : 0) - (keys["arrowleft"] ? 1 : 0)) * SPEED;
-  if (keys["arrowup"] && player2.onGround && !f2) player2.vy = JUMP;
+  if (keys["arrowup"] && player2.onGround && !f2) player2.vy = boost2 ? SUPER_JUMP : JUMP;
   physics(player2, dt);
 
   if (CHASER_ON) {
@@ -331,6 +348,19 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
+  // Goldene Muenze
+  if (coin && !coin.taken) {
+    const cx = coin.plat.x + coin.plat.w / 2, cy = coin.plat.y - 16 + 3 * Math.sin(performance.now() / 200);
+    ctx.fillStyle = "#b8860b"; ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff6a8"; ctx.beginPath(); ctx.arc(cx - 3, cy - 3, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  // Goldener Schein um Spieler mit Superspruengen
+  for (const [a, on] of [[player, boost1], [player2, boost2]]) {
+    if (!on) continue;
+    ctx.fillStyle = "rgba(255,215,0,0.35)";
+    ctx.beginPath(); ctx.arc(a.x + a.w / 2, a.y + a.h / 2, 34, 0, Math.PI * 2); ctx.fill();
+  }
   const cn = catcherIs1();
   const catcherColor = freezeLeft > 0 ? "#8fd9ff" : "#ffe135";
   drawSmiley(player, cn ? catcherColor : "#7ee081", cn);
@@ -345,6 +375,7 @@ function draw() {
   ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
   ctx.fillText("Diese Runde bewegt sich: " + COLOR_NAMES[COLORS.indexOf(moveColor)] + " ↔", 16, 116);
+  if (boost1 || boost2) ctx.fillText("Goldmünze: " + nm(boost1 ? 1 : 2) + " springt doppelt so hoch!", 16, 142);
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
