@@ -2,20 +2,22 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const MAP_SCALE = 1.25;        // Map ist 25% groesser
-const W = 960, H = 540;        // Spielwelt (intern)
+const MAP_SCALE = 1;           // 1 = Spielwelt so gross wie die Zeichenflaeche
+const W = 1200, H = 680;       // Map (25% groesser als vorher)
 canvas.width = W * MAP_SCALE; canvas.height = H * MAP_SCALE;
-const BLOCK = 60;
-const COLS = 16, ROWS = 9;
+const BLOCK = 40;              // kleineres Blockraster
+const COLS = 30, ROWS = 17;
 const CHASER_ON = false;       // Fänger an/aus (true = Fänger ist im Spiel)
 const GAME_TIME = 60;          // Sekunden
 const GRAVITY = 1800, JUMP = -780, SPEED = 260;
 
 // Jede Plattform = 2 Bloecke, jede mit eigener Farbe: [Spalte, Zeile, Farbe]
 const platforms = [
-  [1, 7, "#e74c3c"], [7, 7, "#f1c40f"], [13, 7, "#2ecc71"],
-  [4, 5, "#9b59b6"], [10, 5, "#e67e22"],
-  [1, 3, "#1abc9c"], [7, 3, "#e84393"], [13, 3, "#3498db"],
+  [2, 15, "#e74c3c"], [13, 15, "#f1c40f"], [25, 15, "#2ecc71"],
+  [7, 12, "#3498db"], [19, 12, "#e67e22"],
+  [3, 9, "#9b59b6"], [12, 9, "#1abc9c"], [22, 9, "#e84393"],
+  [8, 6, "#f39c12"], [17, 6, "#16a085"], [27, 6, "#c0392b"],
+  [4, 3, "#2980b9"], [13, 3, "#8e44ad"], [23, 3, "#27ae60"],
 ].map(([c, r, color]) => ({ x: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color }));
 
 const keys = {};
@@ -29,8 +31,8 @@ function makeActor(x, y) {
 let player, chaser, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
-  player = makeActor(1.5 * BLOCK, 7 * BLOCK - 48);
-  chaser = makeActor(13.5 * BLOCK, 7 * BLOCK - 48);
+  player = makeActor(2.5 * BLOCK, 15 * BLOCK - 48);
+  chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
   state = "play";
@@ -89,7 +91,7 @@ function update(dt) {
   }
   physics(chaser, dt);
   if (chaser.y > H) { // Fänger gefallen -> neu auf eine Plattform setzen
-    chaser = makeActor(7.5 * BLOCK, 7 * BLOCK - 48);
+    chaser = makeActor(13.5 * BLOCK, 15 * BLOCK - 48);
   }
 
   }
