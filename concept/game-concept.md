@@ -80,3 +80,4 @@ Dateinamen:
 - Zu zweit am selben Laptop: Spieler 1 = W/A/D (gelb), Spieler 2 = Pfeiltasten (gruen). Wer runterfaellt, verliert.
 - Gelb ist jetzt der Fänger. Fängt er Grün (Berühren) in einer Minute, gewinnt er; sonst gewinnt Grün. Wer runterfällt, verliert. Grün friert Gelb mit Pfeil runter 3 Sekunden ein (1x pro Spiel).
 - Plattformen verschieben sich jede Runde (Spalte -1/0/+1).
+- Plattformen verschieben sich mehr: Spalte -2..+2, Zeile -1..+1.

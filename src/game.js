@@ -20,12 +20,13 @@ const BASE_LAYOUT = [
   [4, 3, "#2980b9"], [13, 3, "#8e44ad"], [23, 3, "#27ae60"],
 ]
 
-// Jede Runde verschieben sich die Plattformen: Spalte um -1, 0 oder +1.
+// Jede Runde verschieben sich die Plattformen: Spalte um -2..+2, Zeile um -1..+1.
 let platforms = [];
 function shufflePlatforms() {
   platforms = BASE_LAYOUT.map(([c, r, color]) => {
-    const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 3) - 1));
-    return { x: col * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color };
+    const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 5) - 2));
+    const row = Math.max(2, Math.min(15, r + Math.floor(Math.random() * 3) - 1));
+    return { x: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color };
   });
 }
 shufflePlatforms();
