@@ -116,6 +116,12 @@ const BOOST_TIME = 30;
 const SUPER_JUMP = JUMP * Math.SQRT2;   // doppelte Sprunghoehe = Startgeschwindigkeit x Wurzel 2
 let coin = null, boost1 = 0, boost2 = 0;   // Restzeit des Superhuepfers in Sekunden
 
+// Portale: auf den zwei gleichfarbigen Plattformen einer Farbe. Wer hineinlaeuft, kommt beim anderen heraus.
+let portals = null;            // [Plattform A, Plattform B]
+let tele1 = false, tele2 = false;   // true = gerade teleportiert, noch im Portal
+const PORTAL_W = 30, PORTAL_H = 56;
+const portalRect = p => ({ x: p.x + p.w / 2 - PORTAL_W / 2, y: p.y - PORTAL_H, w: PORTAL_W, h: PORTAL_H });
+
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
@@ -127,8 +133,14 @@ function reset() {
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
   boost1 = 0; boost2 = 0;
-  // Muenze auf eine zufaellige Plattform (nicht die Startplattformen)
-  const spots = platforms.filter((p, i) => i !== 0 && i !== 2);
+  // Portale: eine zufaellige Farbe, die genau 2 Plattformen hat (nicht die Startfarben)
+  const pairColors = COLORS.filter(c => platforms.filter(p => p.color === c).length === 2 &&
+                                        c !== platforms[0].color && c !== platforms[2].color);
+  const portalColor = pairColors[Math.floor(Math.random() * pairColors.length)];
+  portals = platforms.filter(p => p.color === portalColor);
+  tele1 = false; tele2 = false;
+  // Muenze auf eine zufaellige Plattform (nicht Start- und Portalplattformen)
+  const spots = platforms.filter((p, i) => i !== 0 && i !== 2 && !portals.includes(p));
   coin = { plat: spots[Math.floor(Math.random() * spots.length)], taken: false };
   state = "play";
 }
@@ -176,6 +188,22 @@ function update(dt) {
   timeLeft -= dt;
 
   boost1 = Math.max(0, boost1 - dt); boost2 = Math.max(0, boost2 - dt);
+
+  // Portale: nach dem Teleportieren muss man erst aus dem Portal herauslaufen,
+  // sonst wuerde man sofort zurueckspringen.
+  const through = (a, justTeleported) => {
+    let inside = -1;
+    for (let k = 0; k < 2; k++) {
+      const r = portalRect(portals[k]);
+      if (a.x < r.x + r.w && a.x + a.w > r.x && a.y < r.y + r.h && a.y + a.h > r.y) inside = k;
+    }
+    if (inside < 0) return false;            // draussen: wieder bereit
+    if (justTeleported) return true;         // noch im Portal: warten
+    const dest = portals[1 - inside];
+    a.x = dest.x + dest.w / 2 - a.w / 2; a.y = dest.y - a.h;
+    return true;
+  };
+  tele1 = through(player, tele1); tele2 = through(player2, tele2);
 
   // Muenze einsammeln
   if (coin && !coin.taken) {
@@ -351,6 +379,14 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
+  // Portale zeichnen
+  if (portals) for (const p of portals) {
+    const r = portalRect(p), t = performance.now() / 300;
+    ctx.fillStyle = "#1b0b3a"; ctx.beginPath(); ctx.ellipse(r.x + r.w / 2, r.y + r.h / 2, r.w / 2 + 2, r.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = "#7df9ff"; ctx.stroke();
+    ctx.fillStyle = "#c28bff"; ctx.beginPath();
+    ctx.ellipse(r.x + r.w / 2, r.y + r.h / 2, 6 + 3 * Math.sin(t), 16 + 4 * Math.sin(t), 0, 0, Math.PI * 2); ctx.fill();
+  }
   // Goldene Muenze
   if (coin && !coin.taken) {
     const cx = coin.plat.x + coin.plat.w / 2, cy = coin.plat.y - 16 + 3 * Math.sin(performance.now() / 200);
@@ -378,7 +414,8 @@ function draw() {
   ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
   ctx.fillText("Diese Runde bewegt sich: " + COLOR_NAMES[COLORS.indexOf(moveColor)] + " ↔", 16, 116);
-  if (boost1 > 0 || boost2 > 0) ctx.fillText("Goldmünze: " + nm(boost1 > 0 ? 1 : 2) + " springt doppelt so hoch! Noch " + Math.ceil(Math.max(boost1, boost2)) + " Sek.", 16, 142);
+  if (boost1 > 0 || boost2 > 0) ctx.fillText("Goldmünze: " + nm(boost1 > 0 ? 1 : 2) + " springt doppelt so hoch! Noch " + Math.ceil(Math.max(boost1, boost2)) + " Sek.", 16, 168);
+  ctx.fillText("Portale verbinden die Plattformen in: " + COLOR_NAMES[COLORS.indexOf(portals[0].color)], 16, 142);
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
