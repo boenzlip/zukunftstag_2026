@@ -7,9 +7,9 @@
 - Spieler: allein (die anderen steuert der Computer)
 - Unsere Spielfigur: Smiley mit Beinen
 - So steuert man sie: Tasten W (springen), A (links), D (rechts)
-- Das ist das Ziel:
+- Das ist das Ziel: Nicht runterfallen und nicht vom Computer gefangen werden
 - Das sind die Gefahren:
-- Man verliert, wenn:
+- Man verliert, wenn: man runterfällt oder vom Computer gefangen wird
 
 ## 🎨 So sieht es aus
 
@@ -57,5 +57,6 @@ Dateinamen:
 - Spieler eingetragen: allein, Computer steuert die anderen.
 - Spielfigur eingetragen: Smiley mit Beinen.
 - Steuerung eingetragen: W, A, D.
+- Ziel und Verlieren eingetragen: nicht runterfallen, nicht gefangen werden.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
