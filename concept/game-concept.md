@@ -13,7 +13,7 @@
 
 ## 🎨 So sieht es aus
 
-- Unsere Welt:
+- Unsere Welt: Der Hintergrund sieht aus wie der Himmel. Die Map ist ein Raster, und ein Rasterfeld ist ein Block (wie in Minecraft). Die Map ist so groß wie der Bildschirm. Zwei Blöcke bilden eine Plattform, jede Plattform hat eine andere Farbe. Die Plattformen schweben in der Luft. Man muss von einer zur anderen kommen, auch hoch und runter.
 - Zeichenstil: Pixel / Cartoon / eigene Idee
 - Gegner und Hindernisse:
 - Extras zum Sammeln:
@@ -51,3 +51,5 @@ Dateinamen:
 ## Änderungen
 
 (Hier schreibt Claude auf, was ihr geändert habt.)
+
+- Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
