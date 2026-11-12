@@ -2,6 +2,9 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+const MAP_SCALE = 1.25;        // Map ist 25% groesser
+const W = 960, H = 540;        // Spielwelt (intern)
+W = W * MAP_SCALE; H = H * MAP_SCALE;
 const BLOCK = 60;
 const COLS = 16, ROWS = 9;
 const CHASER_ON = false;       // Fänger an/aus (true = Fänger ist im Spiel)
@@ -48,7 +51,7 @@ function physics(a, dt) {
       }
     }
   }
-  a.x = Math.max(0, Math.min(canvas.width - a.w, a.x));
+  a.x = Math.max(0, Math.min(W - a.w, a.x));
 }
 
 function update(dt) {
@@ -85,7 +88,7 @@ function update(dt) {
     if ((playerAbove && Math.abs(dx) < 300) || !groundAhead || Math.random() < 0.004) chaser.vy = JUMP;
   }
   physics(chaser, dt);
-  if (chaser.y > canvas.height) { // Fänger gefallen -> neu auf eine Plattform setzen
+  if (chaser.y > H) { // Fänger gefallen -> neu auf eine Plattform setzen
     chaser = makeActor(7.5 * BLOCK, 7 * BLOCK - 48);
   }
 
@@ -94,7 +97,7 @@ function update(dt) {
   // Verlieren: runtergefallen oder gefangen
   const caught = CHASER_ON && player.x < chaser.x + chaser.w && player.x + player.w > chaser.x &&
                  player.y < chaser.y + chaser.h && player.y + player.h > chaser.y;
-  if (player.y > canvas.height || caught) state = "lose";
+  if (player.y > H || caught) state = "lose";
   else if (timeLeft <= 0) { timeLeft = 0; state = "win"; }
 }
 
@@ -124,14 +127,15 @@ function drawSmiley(a, color, angry) {
 }
 
 function bigText(text, sub) {
-  ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#fff"; ctx.textAlign = "center";
-  ctx.font = "bold 64px sans-serif"; ctx.fillText(text, canvas.width / 2, 250);
-  ctx.font = "28px sans-serif"; ctx.fillText(sub, canvas.width / 2, 300);
+  ctx.font = "bold 64px sans-serif"; ctx.fillText(text, W / 2, 250);
+  ctx.font = "28px sans-serif"; ctx.fillText(sub, W / 2, 300);
 }
 
 function draw() {
-  ctx.fillStyle = "#87ceeb"; ctx.fillRect(0, 0, canvas.width, canvas.height); // Himmel
+  ctx.setTransform(MAP_SCALE, 0, 0, MAP_SCALE, 0, 0);
+  ctx.fillStyle = "#87ceeb"; ctx.fillRect(0, 0, W, H); // Himmel
   for (const p of platforms) {
     for (let i = 0; i < 2; i++) { // 2 Bloecke pro Plattform
       ctx.fillStyle = p.color; ctx.fillRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
