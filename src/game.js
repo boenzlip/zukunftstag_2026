@@ -122,6 +122,24 @@ let tele1 = false, tele2 = false;   // true = gerade teleportiert, noch im Porta
 const PORTAL_W = 30, PORTAL_H = 56;
 const portalRect = p => ({ x: p.x + p.w / 2 - PORTAL_W / 2, y: p.y - PORTAL_H, w: PORTAL_W, h: PORTAL_H });
 
+// Gruener Hebel: Wer ihn beruehrt, laesst alle Plattformen ausser der Hebel-Plattform verschwinden.
+// Sie erscheinen sofort an neuen Stellen.
+let lever = null, flash = 0;
+const LEVER_W = 34, LEVER_H = 40;
+const leverRect = p => ({ x: p.x + p.w / 2 - LEVER_W / 2, y: p.y - LEVER_H, w: LEVER_W, h: LEVER_H });
+
+// Alle Plattformen ausser Nummer 'keep' bekommen neue Plaetze (immer noch alles erreichbar).
+// Die Objekte bleiben dieselben, damit Portale, Muenze und Hebel mitwandern.
+function respawnPlatforms(keep) {
+  for (let i = 0; i < 500; i++) {
+    const list = randomPlatforms();
+    list[keep] = { ...platforms[keep], x: platforms[keep].baseX };
+    if (!allReachable(list)) continue;
+    platforms.forEach((p, j) => { if (j !== keep) { p.x = list[j].x; p.baseX = list[j].baseX; p.y = list[j].y; } });
+    return;
+  }
+}
+
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
@@ -142,6 +160,10 @@ function reset() {
   // Muenze auf eine zufaellige Plattform (nicht Start- und Portalplattformen)
   const spots = platforms.filter((p, i) => i !== 0 && i !== 2 && !portals.includes(p));
   coin = { plat: spots[Math.floor(Math.random() * spots.length)], taken: false };
+  // Hebel auf einer weiteren zufaelligen Plattform
+  const leverSpots = spots.filter(p => p !== coin.plat);
+  lever = { plat: leverSpots[Math.floor(Math.random() * leverSpots.length)], used: false };
+  flash = 0;
   state = "play";
 }
 
@@ -204,6 +226,17 @@ function update(dt) {
     return true;
   };
   tele1 = through(player, tele1); tele2 = through(player2, tele2);
+
+  // Hebel beruehren
+  flash = Math.max(0, flash - dt);
+  if (lever && !lever.used) {
+    const r = leverRect(lever.plat);
+    const touch = a => a.x < r.x + r.w && a.x + a.w > r.x && a.y < r.y + r.h && a.y + a.h > r.y;
+    if (touch(player) || touch(player2)) {
+      lever.used = true; flash = 0.35;
+      respawnPlatforms(platforms.indexOf(lever.plat));
+    }
+  }
 
   // Muenze einsammeln
   if (coin && !coin.taken) {
@@ -379,6 +412,16 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
+  // Hebel zeichnen
+  if (lever) {
+    const r = leverRect(lever.plat), bx = r.x + r.w / 2, by = lever.plat.y;
+    ctx.fillStyle = "#555"; ctx.fillRect(bx - 16, by - 8, 32, 8);
+    ctx.strokeStyle = "#ddd"; ctx.lineWidth = 5; ctx.lineCap = "round";
+    const dir = lever.used ? 1 : -1;
+    ctx.beginPath(); ctx.moveTo(bx, by - 8); ctx.lineTo(bx + dir * 14, by - 32); ctx.stroke();
+    ctx.fillStyle = "#2ecc40"; ctx.beginPath(); ctx.arc(bx + dir * 14, by - 34, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#0a6b14"; ctx.lineWidth = 2; ctx.stroke(); ctx.lineCap = "butt";
+  }
   // Portale zeichnen
   if (portals) for (const p of portals) {
     const r = portalRect(p), t = performance.now() / 300;
@@ -409,6 +452,7 @@ function draw() {
   ctx.textAlign = "right";
   ctx.fillText(nm(1) + ": " + score1 + "   " + nm(2) + ": " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
   ctx.textAlign = "left";
+  if (flash > 0) { ctx.fillStyle = "rgba(255,255,255," + Math.min(1, flash * 2) + ")"; ctx.fillRect(0, 0, W, H); }
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
