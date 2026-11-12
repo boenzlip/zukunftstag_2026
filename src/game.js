@@ -18,15 +18,16 @@ const BASE_LAYOUT = [[15, ROW_A], [12, ROW_B], [9, ROW_A], [6, ROW_B], [3, ROW_A
   .flatMap(([r, cols]) => cols.map(c => [c, r]))
   .map(([c, r], i) => [c, r, COLORS[i % COLORS.length]]);
 
-const PINK = "#e84393";
+const COLOR_NAMES = ["Rot", "Gelb", "Grün", "Blau", "Orange", "Lila", "Türkis", "Pink", "Gold", "Dunkelgrün", "Dunkelrot", "Dunkelblau"];
+let moveColor = "", lastMoveColor = ""; // Diese Farbe bewegt sich in der aktuellen Runde
 const MOVE_RANGE = 60;         // wie weit sie nach links/rechts wandern (Pixel)
-const MOVE_SPEED = 0.6;        // langsam: etwa 36 Pixel pro Sekunde
+const MOVE_SPEED = 0.9;        // etwa 54 Pixel pro Sekunde
 
 function randomPlatforms() {
   return BASE_LAYOUT.map(([c, r, color]) => {
     const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 5) - 2));
     const row = Math.max(2, Math.min(15, r + Math.floor(Math.random() * 3) - 1));
-    const moving = color === PINK;   // pinke Plattformen bewegen sich langsam links/rechts
+    const moving = color === moveColor;   // Plattformen in der Rundenfarbe bewegen sich links/rechts
     return { x: col * BLOCK, baseX: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving };
   });
 }
@@ -56,7 +57,7 @@ function allReachableAt(list) {
   return true;
 }
 
-// Auch wenn sich die pinken Plattformen ganz links oder ganz rechts befinden,
+// Auch wenn sich die beweglichen Plattformen ganz links oder ganz rechts befinden,
 // muss alles erreichbar bleiben.
 function allReachable(list) {
   const movers = list.map((p, i) => p.moving ? i : -1).filter(i => i >= 0);
@@ -69,11 +70,15 @@ function allReachable(list) {
 }
 
 function shufflePlatforms() {
+  // Jede Runde bewegt sich eine andere Farbe.
+  const choices = COLORS.filter(c => c !== lastMoveColor);
+  moveColor = choices[Math.floor(Math.random() * choices.length)];
+  lastMoveColor = moveColor;
   for (let i = 0; i < 500; i++) {
     const list = randomPlatforms();
     if (allReachable(list)) { platforms = list; return; }
   }
-  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, baseX: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving: color === PINK }));
+  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, baseX: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving: color === moveColor }));
 }
 shufflePlatforms();
 
@@ -160,7 +165,7 @@ function update(dt) {
   }
   timeLeft -= dt;
 
-  // Pinke Plattformen wandern langsam hin und her und nehmen Spieler mit.
+  // Plattformen in der Rundenfarbe wandern langsam hin und her und nehmen Spieler mit.
   for (const p of platforms) {
     if (!p.moving) continue;
     const oldX = p.x;
@@ -320,6 +325,10 @@ function draw() {
       ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 2;
       ctx.strokeRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
     }
+    if (p.moving) { // Pfeil zeigt: diese Plattform bewegt sich
+      ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.font = "bold 22px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("↔", p.x + p.w / 2, p.y + 28); ctx.textAlign = "left";
+    }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
   const cn = catcherIs1();
@@ -335,6 +344,7 @@ function draw() {
   const left = SWAP_EVERY - (rounds % SWAP_EVERY);
   ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
+  ctx.fillText("Diese Runde bewegt sich: " + COLOR_NAMES[COLORS.indexOf(moveColor)] + " ↔", 16, 116);
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";

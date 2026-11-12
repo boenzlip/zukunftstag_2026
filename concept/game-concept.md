@@ -87,3 +87,4 @@ Dateinamen:
 - Rollenwechsel alle 5 Runden eingebaut, Sieg bei 10 Punkten. Spieler 1 = W/A/D, Spieler 2 = Pfeiltasten. Einfrieren: Läufer drückt S (Spieler 1) oder Pfeil runter (Spieler 2), 1x pro Runde.
 - Vor dem Spiel werden die Namen der beiden Spieler abgefragt (Name tippen, Enter).
 - Pinke Plattformen bewegen sich langsam links und rechts und nehmen Spieler mit.
+- Jede Runde bewegt sich eine andere Farbe (etwas schneller). Ein Pfeil auf der Plattform und ein Text oben zeigen, welche.
