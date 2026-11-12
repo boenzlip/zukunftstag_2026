@@ -106,8 +106,19 @@ addEventListener("keydown", e => {
     e.preventDefault();
     return;
   }
+  if (e.key.toLowerCase() === "r") { fullRestart(); return; }   // R = ganz von vorn
   keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault();
 });
+
+// Ganzes Spiel von vorn: Namen, Emojis, Punkte und Rollen werden zurueckgesetzt.
+function fullRestart() {
+  names[0] = ""; names[1] = ""; nameStep = 0;
+  score1 = 0; score2 = 0; rounds = 0; matchOver = false;
+  emoji1 = 0; emoji2 = 1; pickStep = 0; cursor = 0;
+  for (const k in keys) keys[k] = false;
+  reset();
+  state = "names";
+}
 
 // Emoji-Auswahl: erst Spieler 1, dann Spieler 2. Jedes Emoji nur einmal!
 let pickStep = 0, cursor = 0;
