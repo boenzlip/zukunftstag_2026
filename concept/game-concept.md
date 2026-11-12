@@ -4,7 +4,7 @@
 
 - Spielname (darf sich ändern): Jumps
 - Spielart: Jump’n’Run wie ein Fangspiel. Einer ist der Fänger und hat eine Minute Zeit, die anderen zu fangen. Wer von der Map runterfällt, stirbt.
-- Spieler: allein / zu zweit
+- Spieler: allein (die anderen steuert der Computer)
 - Unsere Spielfigur:
 - So steuert man sie:
 - Das ist das Ziel:
@@ -54,5 +54,6 @@ Dateinamen:
 
 - Spielname eingetragen: Jumps.
 - Spielart eingetragen: Jump'n'Run als Fangspiel, 1 Minute Zeit, runterfallen = sterben.
+- Spieler eingetragen: allein, Computer steuert die anderen.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
