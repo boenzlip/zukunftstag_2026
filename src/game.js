@@ -28,7 +28,7 @@ function randomPlatforms() {
     const col = Math.max(0, Math.min(COLS - 2, c + Math.floor(Math.random() * 5) - 2));
     const row = Math.max(2, Math.min(15, r + Math.floor(Math.random() * 3) - 1));
     const moving = color === moveColor;   // Plattformen in der Rundenfarbe bewegen sich links/rechts
-    return { x: col * BLOCK, baseX: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving };
+    return { x: col * BLOCK, baseX: col * BLOCK, y: row * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving, cut: [false, false] };
   });
 }
 
@@ -78,7 +78,7 @@ function shufflePlatforms() {
     const list = randomPlatforms();
     if (allReachable(list)) { platforms = list; return; }
   }
-  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, baseX: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving: color === moveColor }));
+  platforms = BASE_LAYOUT.map(([c, r, color]) => ({ x: c * BLOCK, baseX: c * BLOCK, y: r * BLOCK, w: 2 * BLOCK, h: BLOCK, color, moving: color === moveColor, cut: [false, false] }));
 }
 shufflePlatforms();
 
@@ -106,6 +106,8 @@ addEventListener("keydown", e => {
     e.preventDefault();
     return;
   }
+  if (e.code === "ShiftLeft" && !e.repeat) shiftQ1 = true;      // Spieler 1: linke Shift-Taste
+  if (e.code === "ShiftRight" && !e.repeat) shiftQ2 = true;     // Spieler 2: rechte Shift-Taste
   if (e.key.toLowerCase() === "r") { fullRestart(); return; }   // R = ganz von vorn
   keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault();
 });
@@ -189,6 +191,7 @@ function reset() {
   chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
+  pickUses1 = PICK_USES; pickUses2 = PICK_USES; inv1 = false; inv2 = false; placedBlocks = []; shiftQ1 = false; shiftQ2 = false;
   boost1 = 0; boost2 = 0;
   // Portale: eine zufaellige Farbe, die genau 2 Plattformen hat (nicht die Startfarben)
   const pairColors = COLORS.filter(c => platforms.filter(p => p.color === c).length === 2 &&
@@ -206,6 +209,51 @@ function reset() {
   state = "play";
 }
 
+// Spitzhacke (Shift): Spieler 1 = linke Shift-Taste, Spieler 2 = rechte Shift-Taste.
+// Shift baut den Block ab, auf dem man steht (3 mal pro Runde). Man kann nur 1 Block tragen.
+// Shift mit Block im Inventar setzt ihn direkt unter den Fuessen wieder ab.
+const PICK_USES = 3;
+let shiftQ1 = false, shiftQ2 = false;
+let pickUses1 = PICK_USES, pickUses2 = PICK_USES, inv1 = false, inv2 = false;
+let placedBlocks = [];                       // von Spielern gesetzte Bloecke
+
+// Feste Stuecke einer Plattform (abgebaute Bloecke fehlen)
+function segments(p) {
+  const out = [];
+  for (let i = 0; i < Math.round(p.w / BLOCK); i++) if (!p.cut[i]) out.push([p.x + i * BLOCK, p.x + (i + 1) * BLOCK]);
+  return out;
+}
+function allSolids() { return placedBlocks.length ? platforms.concat(placedBlocks) : platforms; }
+
+function blockOccupied(col, row) {
+  const x0 = col * BLOCK, y0 = row * BLOCK;
+  return allSolids().some(p => p.y < y0 + BLOCK && p.y + BLOCK > y0 && segments(p).some(([a, b]) => a < x0 + BLOCK && b > x0));
+}
+
+function usePickaxe(who) {
+  const a = who === 1 ? player : player2;
+  const holding = who === 1 ? inv1 : inv2;
+  if (holding) { // Block wieder setzen: in der Spalte der Figur, direkt unter den Fuessen
+    const col = Math.floor((a.x + a.w / 2) / BLOCK);
+    let row = Math.floor((a.y + a.h) / BLOCK) + 1;
+    while (row < ROWS && blockOccupied(col, row)) row++;
+    if (row >= ROWS) return;
+    placedBlocks.push({ x: col * BLOCK, baseX: col * BLOCK, y: row * BLOCK, w: BLOCK, h: BLOCK, color: "#b0bec5", cut: [false], moving: false, placed: true });
+    if (who === 1) inv1 = false; else inv2 = false;
+    return;
+  }
+  const uses = who === 1 ? pickUses1 : pickUses2;
+  const p = a.standingOn;
+  if (uses <= 0 || !a.onGround || !p) return;
+  const n = Math.round(p.w / BLOCK), cx = a.x + a.w / 2;
+  let i = Math.max(0, Math.min(n - 1, Math.floor((cx - p.x) / BLOCK)));
+  if (p.cut[i]) i = n - 1 - i;
+  if (p.cut[i]) return;
+  p.cut[i] = true;
+  if (p.placed) placedBlocks = placedBlocks.filter(b => b !== p);
+  if (who === 1) { inv1 = true; pickUses1--; } else { inv2 = true; pickUses2--; }
+}
+
 function physics(a, dt) {
   a.vy += GRAVITY * dt;
   a.x += a.vx * dt;
@@ -214,8 +262,8 @@ function physics(a, dt) {
   a.onGround = false; a.standingOn = null;
   // Plattformen sind von oben fest: man landet nur, wenn man von oben kommt.
   if (a.vy >= 0) {
-    for (const p of platforms) {
-      const overlapX = a.x + a.w > p.x && a.x < p.x + p.w;
+    for (const p of allSolids()) {
+      const overlapX = segments(p).some(([x0, x1]) => a.x + a.w > x0 && a.x < x1);
       if (overlapX && prevBottom <= p.y + 1 && a.y + a.h >= p.y) {
         a.y = p.y - a.h; a.vy = 0; a.onGround = true; a.standingOn = p;
       }
@@ -313,6 +361,9 @@ function update(dt) {
     if (touch(player)) { coin.taken = true; boost1 = BOOST_TIME; }
     else if (touch(player2)) { coin.taken = true; boost2 = BOOST_TIME; }
   }
+
+  if (shiftQ1) { shiftQ1 = false; usePickaxe(1); }
+  if (shiftQ2) { shiftQ2 = false; usePickaxe(2); }
 
   // Faenger = gelb, Laeufer = gruen. Der Laeufer kann den Faenger 3 Sekunden einfrieren (1x pro Runde):
   // Spieler 1 mit S, Spieler 2 mit Pfeil runter.
@@ -505,6 +556,7 @@ function draw() {
   drawBackground(performance.now() / 1000);
   for (const p of platforms) {
     for (let i = 0; i < 2; i++) { // 2 Bloecke pro Plattform
+      if (p.cut[i]) continue;               // abgebauter Block
       ctx.fillStyle = p.color; ctx.fillRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
       ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 2;
       ctx.strokeRect(p.x + i * BLOCK, p.y, BLOCK, BLOCK);
@@ -515,6 +567,11 @@ function draw() {
     }
   }
   if (CHASER_ON) drawSmiley(chaser, freezeLeft > 0 ? "#8fd9ff" : "#e74c3c", true);
+  // Von Spielern gesetzte Bloecke
+  for (const b of placedBlocks) {
+    ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, BLOCK, BLOCK);
+    ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 2; ctx.strokeRect(b.x, b.y, BLOCK, BLOCK);
+  }
   // Hebel zeichnen
   if (lever) {
     const r = leverRect(lever.plat), bx = r.x + r.w / 2, by = lever.plat.y;
@@ -539,6 +596,13 @@ function draw() {
     ctx.fillStyle = "#b8860b"; ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#fff6a8"; ctx.beginPath(); ctx.arc(cx - 3, cy - 3, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  // Spitzhacke: ueber dem Kopf steht, wie oft man noch abbauen darf; ein Block zeigt: Block im Inventar
+  for (const [a, uses, inv] of [[player, pickUses1, inv1], [player2, pickUses2, inv2]]) {
+    ctx.textAlign = "center"; ctx.font = "bold 16px sans-serif"; ctx.fillStyle = "#fff";
+    ctx.fillText("⛏" + uses, a.x + a.w / 2 - (inv ? 8 : 0), a.y - 12);
+    if (inv) { ctx.fillStyle = "#b0bec5"; ctx.fillRect(a.x + a.w / 2 + 8, a.y - 24, 14, 14); ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.strokeRect(a.x + a.w / 2 + 8, a.y - 24, 14, 14); }
+    ctx.textAlign = "left";
   }
   // Goldener Schein um Spieler mit Superspruengen
   for (const [a, on] of [[player, boost1], [player2, boost2]]) {
