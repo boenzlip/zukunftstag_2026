@@ -18,7 +18,7 @@
 - Gegner und Hindernisse: Wütende Smileys (sie fangen den Spieler)
 - Extras zum Sammeln: keine
 - Punkte bekommt man für: keine Punkte
-- Unsere besondere Idee:
+- Unsere besondere Idee: Mit der E-Taste kann man den Fänger für 3 Sekunden einfrieren, aber nur einmal pro Spiel
 
 ## 🛠️ Unsere erste Version
 
@@ -64,5 +64,6 @@ Dateinamen:
 - Gegner eingetragen: wütende Smileys.
 - Extras: keine.
 - Punkte: keine.
+- Besondere Idee eingetragen: E-Taste friert den Fänger 3 Sekunden ein, nur einmal pro Spiel.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
