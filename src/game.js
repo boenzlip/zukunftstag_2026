@@ -68,6 +68,8 @@ function makeActor(x, y) {
   return { x, y, w: 36, h: 48, vx: 0, vy: 0, onGround: false };
 }
 
+let score1 = 0, score2 = 0, matchOver = false;
+const WIN_SCORE = 5;           // Wer zuerst 5 Punkte hat, gewinnt
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
 function reset() {
@@ -100,9 +102,23 @@ function physics(a, dt) {
   if (a.y < 0) { a.y = 0; a.vy = 0; } // oben ist eine Decke
 }
 
+// Runde zu Ende: who = 1 (Gelb), 2 (Gruen) oder 0 (keiner) bekommt einen Punkt.
+function endRound(who, text) {
+  state = "end"; winner = text;
+  if (who === 1) score1++;
+  if (who === 2) score2++;
+  if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
+    matchOver = true;
+    winner = (score1 >= WIN_SCORE ? "GELB" : "GRÜN") + " GEWINNT DAS SPIEL!";
+  }
+}
+
 function update(dt) {
   if (state !== "play") {
-    if (keys["enter"] || keys[" "]) reset();
+    if (keys["enter"] || keys[" "]) {
+      if (matchOver) { score1 = 0; score2 = 0; matchOver = false; }
+      reset();
+    }
     return;
   }
   timeLeft -= dt;
@@ -154,11 +170,11 @@ function update(dt) {
   const caught = player.x < player2.x + player2.w && player.x + player.w > player2.x &&
                  player.y < player2.y + player2.h && player.y + player.h > player2.y;
   const p1Out = player.y > H, p2Out = player2.y > H;
-  if (caught) { state = "end"; winner = "Fänger (gelb) hat gefangen!"; }
-  else if (p1Out && p2Out) { state = "end"; winner = "Unentschieden!"; }
-  else if (p1Out) { state = "end"; winner = "Fänger gefallen: Grün gewinnt!"; }
-  else if (p2Out) { state = "end"; winner = "Grün gefallen: Fänger gewinnt!"; }
-  else if (timeLeft <= 0) { timeLeft = 0; state = "end"; winner = "Zeit um: Grün gewinnt!"; }
+  if (caught) endRound(1, "Gelb hat Grün gefangen!");
+  else if (p1Out && p2Out) endRound(0, "Unentschieden!");
+  else if (p1Out) endRound(2, "Gelb ist gefallen: Punkt für Grün!");
+  else if (p2Out) endRound(1, "Grün ist gefallen: Punkt für Gelb!");
+  else if (timeLeft <= 0) { timeLeft = 0; endRound(2, "Zeit um: Punkt für Grün!"); }
 }
 
 function drawSmiley(a, color, angry) {
@@ -260,9 +276,10 @@ function draw() {
   drawSmiley(player2, "#7ee081", false);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
+  ctx.textAlign = "right"; ctx.fillText("Gelb " + score1 + " : " + score2 + " Grün  (bis " + WIN_SCORE + ")", W - 16, 36); ctx.textAlign = "left";
   ctx.font = "20px sans-serif";
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Grün: Pfeil runter = Fänger einfrieren (1x)", 16, 64);
-  if (state === "end") bigText(winner, "Enter = nochmal");
+  if (state === "end") bigText(winner, matchOver ? "Enter = neues Spiel" : "Enter = nächste Runde");
 }
 
 let last = performance.now();

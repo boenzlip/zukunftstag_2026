@@ -17,7 +17,7 @@
 - Zeichenstil: Pixel
 - Gegner und Hindernisse: Wütende Smileys (sie fangen den Spieler)
 - Extras zum Sammeln: keine
-- Punkte bekommt man für: keine Punkte
+- Punkte bekommt man für: Rundensieg (1 Punkt). Wer zuerst 5 Punkte hat, gewinnt das Spiel
 - Unsere besondere Idee: Mit der E-Taste kann man den Fänger für 3 Sekunden einfrieren, aber nur einmal pro Spiel
 
 ## 🛠️ Unsere erste Version
@@ -83,3 +83,4 @@ Dateinamen:
 - Plattformen verschieben sich mehr: Spalte -2..+2, Zeile -1..+1.
 - Plattformen werden so gemischt, dass man immer überall hinkommt (Sprungweite wird geprüft).
 - Mehr Plattformen (23). Von JEDER Plattform kann man jede andere erreichen, auch nach dem Mischen.
+- Punkte eingebaut: Rundensieger bekommt 1 Punkt, wer zuerst 5 hat, gewinnt.
