@@ -17,7 +17,7 @@
 - Zeichenstil: Pixel
 - Gegner und Hindernisse: Wütende Smileys (sie fangen den Spieler)
 - Extras zum Sammeln: keine
-- Punkte bekommt man für:
+- Punkte bekommt man für: keine Punkte
 - Unsere besondere Idee:
 
 ## 🛠️ Unsere erste Version
@@ -63,5 +63,6 @@ Dateinamen:
 - Zeichenstil eingetragen: Pixel.
 - Gegner eingetragen: wütende Smileys.
 - Extras: keine.
+- Punkte: keine.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
