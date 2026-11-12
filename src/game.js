@@ -90,13 +90,40 @@ const nm = n => names[n - 1] || ("Spieler " + n);
 
 addEventListener("keydown", e => {
   if (state === "names") { // Namen eintippen
-    if (e.key === "Enter") { if (++nameStep > 1) reset(); }
+    if (e.key === "Enter") { if (++nameStep > 1) { state = "pick"; pickStep = 0; cursor = 0; } }
     else if (e.key === "Backspace") names[nameStep] = names[nameStep].slice(0, -1);
     else if (e.key.length === 1 && names[nameStep].length < 12) names[nameStep] += e.key;
     e.preventDefault();
     return;
   }
+  if (state === "pick") { // Emoji waehlen
+    const k = e.key.toLowerCase();
+    if (k === "arrowright" || k === "d") cursor = (cursor + 1) % 10;
+    else if (k === "arrowleft" || k === "a") cursor = (cursor + 9) % 10;
+    else if (k === "arrowdown" || k === "s") cursor = (cursor + 5) % 10;
+    else if (k === "arrowup" || k === "w") cursor = (cursor + 5) % 10;
+    else if (k === "enter" || k === " ") choose(cursor);
+    e.preventDefault();
+    return;
+  }
   keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault();
+});
+
+// Emoji-Auswahl: erst Spieler 1, dann Spieler 2. Jedes Emoji nur einmal!
+let pickStep = 0, cursor = 0;
+function takenBy(i) { return pickStep >= 1 && emoji1 === i ? 1 : 0; }
+function choose(i) {
+  if (takenBy(i)) return;                  // schon vergeben
+  if (pickStep === 0) { emoji1 = i; pickStep = 1; cursor = (i + 1) % 10; }
+  else { emoji2 = i; reset(); }
+}
+const CELL = { w: 150, h: 170, x0: (W - 5 * 150) / 2, y0: 210 };   // Gitter 5 x 2
+canvas.addEventListener("click", e => {
+  if (state !== "pick") return;
+  const r = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (W / r.width), my = (e.clientY - r.top) * (H / r.height);
+  const col = Math.floor((mx - CELL.x0) / CELL.w), row = Math.floor((my - CELL.y0) / CELL.h);
+  if (col >= 0 && col < 5 && row >= 0 && row < 2) { cursor = row * 5 + col; choose(cursor); }
 });
 addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 
@@ -190,9 +217,6 @@ function physics(a, dt) {
 // Runde zu Ende: who = 1 (Spieler 1), 2 (Spieler 2) oder 0 (keiner) bekommt einen Punkt.
 function endRound(who, text) {
   state = "end"; winner = text;
-  if (who === 1) { skin1 = "win"; skin2 = "lose"; }
-  else if (who === 2) { skin1 = "lose"; skin2 = "win"; }
-  else { skin1 = "win"; skin2 = "win"; }
   rounds++;
   if (who === 1) score1++;
   if (who === 2) score2++;
@@ -203,10 +227,10 @@ function endRound(who, text) {
 }
 
 function update(dt) {
-  if (state === "names") return;
+  if (state === "names" || state === "pick") return;
   if (state !== "play") {
     if (keys["enter"] || keys[" "]) {
-      if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; skin1 = "win"; skin2 = "win"; }
+      if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; }
       reset();
     }
     return;
@@ -338,27 +362,57 @@ function update(dt) {
   else if (timeLeft <= 0) { timeLeft = 0; endRound(runnerN, "Zeit um: Punkt für " + nm(runnerN) + "!"); }
 }
 
-// Skins: Wer die letzte Runde gewonnen hat, bekommt den grinsenden Smiley,
-// wer verloren hat, den weinenden. (Bilder aus dem Ordner art/)
-const USE_SKINS = false;       // true = Bilder-Skins (grinsend/weinend), false = gemalte gelbe/gruene Smileys
-const SKIN_SRC = { win: "art/skin_winner.png", lose: "art/skin_loser.png" };
-const skinImg = {};
-for (const k in SKIN_SRC) { skinImg[k] = new Image(); skinImg[k].src = SKIN_SRC[k]; }
-let skin1 = "win", skin2 = "win";       // am Anfang haben beide den grinsenden Smiley
+// Pixel-Emojis (12 x 12). Jeder Spieler waehlt eins; jedes Emoji gibt es nur einmal pro Spiel.
+// Zeichen: O = Rand, Y = gelb, W = weiss, B = schwarz, R = rot, L = blau, G = gruen, P = rosa, . = nichts aendern
+const EMOJI_COLORS = { O: "#5a3a00", Y: "#ffd23f", W: "#ffffff", B: "#1b1b1b", R: "#e63946", L: "#4dabf7", G: "#6cc24a", P: "#ff8fab" };
+const EMOJI_BASE = [
+  "...OOOOOO...", ".OOYYYYYYOO.", ".OYYYYYYYYO.", "OYYYYYYYYYYO", "OYYYYYYYYYYO", "OYYYYYYYYYYO",
+  "OYYYYYYYYYYO", "OYYYYYYYYYYO", "OYYYYYYYYYYO", ".OYYYYYYYYO.", ".OOYYYYYYOO.", "...OOOOOO...",
+];
+// patch = Zeilen 3..9 der Gesichter (nur Gesichtsdetails), base = Grundfarbe
+const EMOJI_DEFS = [
+  { name: "Grinser",     patch: ["...BB..BB...", "...BB..BB...", "............", "............", "..BBBBBBBB..", "...BWWWWB...", "....BBBB...."] },
+  { name: "Zunge raus",  patch: ["...BB.......", "...BB..BBB..", "............", "............", "..BBBBBBBB..", "...BRRRRB...", "....RRRR...."] },
+  { name: "Cool",        patch: [".BBBBBBBBBB.", ".BBBBBBBBBB.", "..BB....BB..", "............", "..B......B..", "...BBBBBB...", "............"] },
+  { name: "Herzaugen",   patch: ["..R.R..R.R..", "..RRR..RRR..", "...R....R...", "............", "..B......B..", "...BBBBBB...", "............"] },
+  { name: "Lachtränen",  patch: ["..BB....BB..", "...BB..BB...", "..L......L..", "..L......L..", "..BBBBBBBB..", "...BWWWWB...", "....BBBB...."] },
+  { name: "Schock",      patch: ["..WW....WW..", "..WB....BW..", "..WW....WW..", "............", "....BBBB....", "....BBBB....", "....BBBB...."] },
+  { name: "Müde",        patch: ["............", "..BBB..BBB..", "............", "............", "...BBBBB....", "........L...", "............"] },
+  { name: "Streber",     patch: [".BBBB..BBBB.", ".BWWBBBBWWB.", ".BBBB..BBBB.", "............", "...BBBBBB...", "....BWWB....", "............"] },
+  { name: "Alien", base: "G", patch: [".BBB....BBB.", "..BBB..BBB..", "...BB..BB...", "............", "............", "....BBBB....", "............"] },
+  { name: "Clown", base: "W", patch: ["LL........LL", "...BB..BB...", ".....RR.....", ".....RR.....", "............", "..RRRRRRRR..", "............"] },
+];
+// Jedes Emoji einmal in eine Liste von farbigen Punkten umrechnen
+const EMOJI_PIXELS = EMOJI_DEFS.map(def => {
+  const rows = EMOJI_BASE.map(r => r.split(""));
+  const base = def.base || "Y";
+  rows.forEach((r, y) => r.forEach((c, x) => { if (c === "Y") rows[y][x] = base; }));
+  def.patch.forEach((line, i) => line.split("").forEach((c, x) => { if (c !== ".") rows[3 + i][x] = c; }));
+  const px = [];
+  rows.forEach((r, y) => r.forEach((c, x) => { if (c !== ".") px.push([x, y, EMOJI_COLORS[c] || EMOJI_COLORS.Y]); }));
+  return px;
+});
 
-// Figur mit Skin: Bild als Kopf, Ring in der Rollenfarbe (gelb = Faenger, gruen = Laeufer), dazu Beine.
-function drawSkinned(a, ringColor, skin, angry) {
-  const img = skinImg[skin];
-  if (!USE_SKINS || !img || !img.complete || !img.naturalWidth) return drawSmiley(a, ringColor, angry);
+function drawEmoji(idx, x, y, size) {
+  const u = size / 12;
+  for (const [cx, cy, color] of EMOJI_PIXELS[idx]) {
+    ctx.fillStyle = color; ctx.fillRect(x + cx * u, y + cy * u, Math.ceil(u), Math.ceil(u));
+  }
+}
+
+let emoji1 = 0, emoji2 = 1;   // gewaehlte Emojis (Spieler 1, Spieler 2)
+
+// Figur: Pixel-Emoji als Kopf, Ring in der Rollenfarbe (gelb = Faenger, gruen = Laeufer), Beine (Faenger = rot).
+function drawPlayer(a, ringColor, emojiIdx, isCatcher) {
   const cx = a.x + a.w / 2, cy = a.y + 19;
-  ctx.strokeStyle = angry ? "#e00000" : "#000"; ctx.lineWidth = 4;   // Faenger hat rote Beine
+  ctx.strokeStyle = isCatcher ? "#e00000" : "#000"; ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(cx - 8, cy + 19); ctx.lineTo(cx - 10, a.y + a.h);
   ctx.moveTo(cx + 8, cy + 19); ctx.lineTo(cx + 10, a.y + a.h);
   ctx.stroke();
   ctx.strokeStyle = ringColor; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.stroke();
-  ctx.drawImage(img, cx - 19, cy - 19, 38, 38);
+  ctx.beginPath(); ctx.arc(cx, cy, 24, 0, Math.PI * 2); ctx.stroke();
+  drawEmoji(emojiIdx, cx - 20, cy - 20, 40);
 }
 
 function drawSmiley(a, color, angry) {
@@ -493,14 +547,32 @@ function draw() {
   }
   const cn = catcherIs1();
   const catcherColor = freezeLeft > 0 ? "#8fd9ff" : "#ffe135";
-  drawSkinned(player, cn ? catcherColor : "#7ee081", skin1, cn);
-  drawSkinned(player2, cn ? "#7ee081" : catcherColor, skin2, !cn);
+  drawPlayer(player, cn ? catcherColor : "#7ee081", emoji1, cn);
+  drawPlayer(player2, cn ? "#7ee081" : catcherColor, emoji2, !cn);
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.textAlign = "right";
   ctx.fillText(nm(1) + ": " + score1 + "   " + nm(2) + ": " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
   ctx.textAlign = "left";
   if (flash > 0) { ctx.fillStyle = "rgba(255,255,255," + Math.min(1, flash * 2) + ")"; ctx.fillRect(0, 0, W, H); }
+  if (state === "pick") {
+    ctx.fillStyle = "rgba(0,0,0,0.75)"; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center"; ctx.fillStyle = "#fff"; ctx.font = "bold 36px sans-serif";
+    ctx.fillText(nm(pickStep + 1) + ": Wähle dein Emoji!", W / 2, 110);
+    ctx.font = "20px sans-serif";
+    ctx.fillText("Pfeiltasten oder W/A/S/D bewegen, Enter wählen (oder anklicken). Jedes Emoji gibt es nur einmal.", W / 2, 150);
+    for (let i = 0; i < 10; i++) {
+      const x = CELL.x0 + (i % 5) * CELL.w, y = CELL.y0 + Math.floor(i / 5) * CELL.h;
+      const taken = takenBy(i);
+      ctx.fillStyle = i === cursor ? "rgba(255,215,0,0.35)" : "rgba(255,255,255,0.08)";
+      ctx.fillRect(x + 8, y + 8, CELL.w - 16, CELL.h - 16);
+      if (i === cursor) { ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 4; ctx.strokeRect(x + 8, y + 8, CELL.w - 16, CELL.h - 16); }
+      ctx.globalAlpha = taken ? 0.25 : 1; drawEmoji(i, x + CELL.w / 2 - 48, y + 22, 96); ctx.globalAlpha = 1;
+      ctx.fillStyle = "#fff"; ctx.font = "18px sans-serif";
+      ctx.fillText(taken ? "vergeben: " + nm(taken) : EMOJI_DEFS[i].name, x + CELL.w / 2, y + 144);
+    }
+    ctx.textAlign = "left";
+  }
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
