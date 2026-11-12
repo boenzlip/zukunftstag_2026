@@ -93,3 +93,4 @@ Dateinamen:
 - Portale: jede Runde erscheint auf den zwei gleichfarbigen Plattformen einer Farbe je ein Portal. Wer hineinläuft, wird zum anderen teleportiert.
 - Text unter der Zeit entfernt.
 - Grüner Hebel: jede Runde auf einer Plattform. Wer ihn berührt, lässt alle Plattformen außer der Hebel-Plattform verschwinden. Sie erscheinen sofort an neuen Stellen (immer noch alles erreichbar).
+- Hebel geändert: Alle Plattformen gleiten animiert an neue Stellen. Der Hebel zieht danach auf eine andere Plattform um und kann immer wieder benutzt werden.

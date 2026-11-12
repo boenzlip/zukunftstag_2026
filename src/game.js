@@ -122,20 +122,21 @@ let tele1 = false, tele2 = false;   // true = gerade teleportiert, noch im Porta
 const PORTAL_W = 30, PORTAL_H = 56;
 const portalRect = p => ({ x: p.x + p.w / 2 - PORTAL_W / 2, y: p.y - PORTAL_H, w: PORTAL_W, h: PORTAL_H });
 
-// Gruener Hebel: Wer ihn beruehrt, laesst alle Plattformen ausser der Hebel-Plattform verschwinden.
-// Sie erscheinen sofort an neuen Stellen.
+// Gruener Hebel: Wer ihn beruehrt, laesst ALLE Plattformen an neue Stellen gleiten (animiert).
+// Der Hebel zieht dabei auf eine andere Plattform um und kann immer wieder benutzt werden.
 let lever = null, flash = 0;
 const LEVER_W = 34, LEVER_H = 40;
+const SLIDE_TIME = 1.5;        // so lange gleiten die Plattformen (Sekunden)
 const leverRect = p => ({ x: p.x + p.w / 2 - LEVER_W / 2, y: p.y - LEVER_H, w: LEVER_W, h: LEVER_H });
 
-// Alle Plattformen ausser Nummer 'keep' bekommen neue Plaetze (immer noch alles erreichbar).
-// Die Objekte bleiben dieselben, damit Portale, Muenze und Hebel mitwandern.
-function respawnPlatforms(keep) {
+// Neue Plaetze fuer alle Plattformen suchen (immer noch alles erreichbar) und losgleiten lassen.
+function slidePlatforms() {
   for (let i = 0; i < 500; i++) {
     const list = randomPlatforms();
-    list[keep] = { ...platforms[keep], x: platforms[keep].baseX };
     if (!allReachable(list)) continue;
-    platforms.forEach((p, j) => { if (j !== keep) { p.x = list[j].x; p.baseX = list[j].baseX; p.y = list[j].y; } });
+    platforms.forEach((p, j) => {
+      p.anim = { x0: p.baseX, y0: p.y, x1: list[j].baseX, y1: list[j].y, t: 0 };
+    });
     return;
   }
 }
@@ -162,7 +163,7 @@ function reset() {
   coin = { plat: spots[Math.floor(Math.random() * spots.length)], taken: false };
   // Hebel auf einer weiteren zufaelligen Plattform
   const leverSpots = spots.filter(p => p !== coin.plat);
-  lever = { plat: leverSpots[Math.floor(Math.random() * leverSpots.length)], used: false };
+  lever = { plat: leverSpots[Math.floor(Math.random() * leverSpots.length)], cool: false, flip: false };
   flash = 0;
   state = "play";
 }
@@ -211,6 +212,22 @@ function update(dt) {
 
   boost1 = Math.max(0, boost1 - dt); boost2 = Math.max(0, boost2 - dt);
 
+  // Plattformen: gleiten zu neuen Stellen (Hebel) und/oder wandern hin und her (Rundenfarbe).
+  // Spieler, die darauf stehen, werden mitgenommen.
+  for (const p of platforms) {
+    const oldX = p.x, oldY = p.y;
+    if (p.anim) {
+      p.anim.t = Math.min(1, p.anim.t + dt / SLIDE_TIME);
+      const e = p.anim.t * p.anim.t * (3 - 2 * p.anim.t);   // weich starten und bremsen
+      p.baseX = p.anim.x0 + (p.anim.x1 - p.anim.x0) * e;
+      p.y = p.anim.y0 + (p.anim.y1 - p.anim.y0) * e;
+      if (p.anim.t >= 1) p.anim = null;
+    }
+    p.x = p.moving ? p.baseX + MOVE_RANGE * Math.sin((GAME_TIME - timeLeft) * MOVE_SPEED) : p.baseX;
+    for (const a of [player, player2]) if (a.standingOn === p) { a.x += p.x - oldX; a.y += p.y - oldY; }
+  }
+  const sliding = platforms.some(p => p.anim);
+
   // Portale: nach dem Teleportieren muss man erst aus dem Portal herauslaufen,
   // sonst wuerde man sofort zurueckspringen.
   const through = (a, justTeleported) => {
@@ -227,14 +244,21 @@ function update(dt) {
   };
   tele1 = through(player, tele1); tele2 = through(player2, tele2);
 
-  // Hebel beruehren
+  // Hebel beruehren (immer wieder benutzbar; erst loslassen/weggehen, dann wieder bereit)
   flash = Math.max(0, flash - dt);
-  if (lever && !lever.used) {
+  if (lever) {
     const r = leverRect(lever.plat);
     const touch = a => a.x < r.x + r.w && a.x + a.w > r.x && a.y < r.y + r.h && a.y + a.h > r.y;
-    if (touch(player) || touch(player2)) {
-      lever.used = true; flash = 0.35;
-      respawnPlatforms(platforms.indexOf(lever.plat));
+    const touching = touch(player) || touch(player2);
+    if (touching && !lever.cool && !sliding) {
+      lever.cool = true; lever.flip = !lever.flip; flash = 0.25;
+      slidePlatforms();
+      // Hebel zieht auf eine andere Plattform um (nicht auf Portal- oder Muenzplattform)
+      const spots = platforms.filter(p => p !== lever.plat && !portals.includes(p) && p !== player.standingOn && p !== player2.standingOn &&
+                                         !(coin && !coin.taken && p === coin.plat));
+      lever.plat = spots[Math.floor(Math.random() * spots.length)];
+    } else if (!touching && !sliding) {
+      lever.cool = false;
     }
   }
 
@@ -244,14 +268,6 @@ function update(dt) {
     const touch = a => a.x < cx + 14 && a.x + a.w > cx - 14 && a.y < cy + 14 && a.y + a.h > cy - 14;
     if (touch(player)) { coin.taken = true; boost1 = BOOST_TIME; }
     else if (touch(player2)) { coin.taken = true; boost2 = BOOST_TIME; }
-  }
-
-  // Plattformen in der Rundenfarbe wandern langsam hin und her und nehmen Spieler mit.
-  for (const p of platforms) {
-    if (!p.moving) continue;
-    const oldX = p.x;
-    p.x = p.baseX + MOVE_RANGE * Math.sin((GAME_TIME - timeLeft) * MOVE_SPEED);
-    for (const a of [player, player2]) if (a.standingOn === p) a.x += p.x - oldX;
   }
 
   // Faenger = gelb, Laeufer = gruen. Der Laeufer kann den Faenger 3 Sekunden einfrieren (1x pro Runde):
@@ -393,7 +409,7 @@ function drawBackground(t) {
 function bigText(text, sub) {
   ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#fff"; ctx.textAlign = "center";
-  ctx.font = "bold 64px sans-serif"; ctx.fillText(text, W / 2, 250);
+  ctx.font = "bold 48px sans-serif"; ctx.fillText(text, W / 2, 250);
   ctx.font = "28px sans-serif"; ctx.fillText(sub, W / 2, 300);
 }
 
@@ -417,7 +433,7 @@ function draw() {
     const r = leverRect(lever.plat), bx = r.x + r.w / 2, by = lever.plat.y;
     ctx.fillStyle = "#555"; ctx.fillRect(bx - 16, by - 8, 32, 8);
     ctx.strokeStyle = "#ddd"; ctx.lineWidth = 5; ctx.lineCap = "round";
-    const dir = lever.used ? 1 : -1;
+    const dir = lever.flip ? 1 : -1;
     ctx.beginPath(); ctx.moveTo(bx, by - 8); ctx.lineTo(bx + dir * 14, by - 32); ctx.stroke();
     ctx.fillStyle = "#2ecc40"; ctx.beginPath(); ctx.arc(bx + dir * 14, by - 34, 8, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "#0a6b14"; ctx.lineWidth = 2; ctx.stroke(); ctx.lineCap = "butt";
