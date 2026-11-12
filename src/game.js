@@ -111,9 +111,10 @@ let rounds = 0;                // gespielte Runden
 // Spieler 1 = W/A/D (player), Spieler 2 = Pfeiltasten (player2)
 const catcherIs1 = () => Math.floor(rounds / SWAP_EVERY) % 2 === 0;
 // Goldene Muenze: liegt jede Runde auf einer zufaelligen Plattform.
-// Wer sie einsammelt, springt fuer den Rest der Runde doppelt so hoch.
+// Wer sie einsammelt, springt 30 Sekunden lang doppelt so hoch.
+const BOOST_TIME = 30;
 const SUPER_JUMP = JUMP * Math.SQRT2;   // doppelte Sprunghoehe = Startgeschwindigkeit x Wurzel 2
-let coin = null, boost1 = false, boost2 = false;
+let coin = null, boost1 = 0, boost2 = 0;   // Restzeit des Superhuepfers in Sekunden
 
 let player, player2, chaser, winner, timeLeft, state, freezeLeft, freezeUsed, chaserClock; // state: "play" | "win" | "lose"
 
@@ -125,7 +126,7 @@ function reset() {
   chaser = makeActor(25.5 * BLOCK, 15 * BLOCK - 48);
   timeLeft = GAME_TIME;
   freezeLeft = 0; freezeUsed = false; chaserClock = 0;
-  boost1 = false; boost2 = false;
+  boost1 = 0; boost2 = 0;
   // Muenze auf eine zufaellige Plattform (nicht die Startplattformen)
   const spots = platforms.filter((p, i) => i !== 0 && i !== 2);
   coin = { plat: spots[Math.floor(Math.random() * spots.length)], taken: false };
@@ -174,12 +175,14 @@ function update(dt) {
   }
   timeLeft -= dt;
 
+  boost1 = Math.max(0, boost1 - dt); boost2 = Math.max(0, boost2 - dt);
+
   // Muenze einsammeln
   if (coin && !coin.taken) {
     const cx = coin.plat.x + coin.plat.w / 2, cy = coin.plat.y - 16;
     const touch = a => a.x < cx + 14 && a.x + a.w > cx - 14 && a.y < cy + 14 && a.y + a.h > cy - 14;
-    if (touch(player)) { coin.taken = true; boost1 = true; }
-    else if (touch(player2)) { coin.taken = true; boost2 = true; }
+    if (touch(player)) { coin.taken = true; boost1 = BOOST_TIME; }
+    else if (touch(player2)) { coin.taken = true; boost2 = BOOST_TIME; }
   }
 
   // Plattformen in der Rundenfarbe wandern langsam hin und her und nehmen Spieler mit.
@@ -357,7 +360,7 @@ function draw() {
   }
   // Goldener Schein um Spieler mit Superspruengen
   for (const [a, on] of [[player, boost1], [player2, boost2]]) {
-    if (!on) continue;
+    if (on <= 0) continue;
     ctx.fillStyle = "rgba(255,215,0,0.35)";
     ctx.beginPath(); ctx.arc(a.x + a.w / 2, a.y + a.h / 2, 34, 0, Math.PI * 2); ctx.fill();
   }
@@ -375,7 +378,7 @@ function draw() {
   ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
   ctx.fillText("Diese Runde bewegt sich: " + COLOR_NAMES[COLORS.indexOf(moveColor)] + " ↔", 16, 116);
-  if (boost1 || boost2) ctx.fillText("Goldmünze: " + nm(boost1 ? 1 : 2) + " springt doppelt so hoch!", 16, 142);
+  if (boost1 > 0 || boost2 > 0) ctx.fillText("Goldmünze: " + nm(boost1 > 0 ? 1 : 2) + " springt doppelt so hoch! Noch " + Math.ceil(Math.max(boost1, boost2)) + " Sek.", 16, 142);
   if (state === "names") {
     ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";

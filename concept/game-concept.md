@@ -88,4 +88,5 @@ Dateinamen:
 - Vor dem Spiel werden die Namen der beiden Spieler abgefragt (Name tippen, Enter).
 - Pinke Plattformen bewegen sich langsam links und rechts und nehmen Spieler mit.
 - Jede Runde bewegt sich eine andere Farbe (etwas schneller). Ein Pfeil auf der Plattform und ein Text oben zeigen, welche.
-- Goldmünze: jede Runde liegt eine auf einer zufälligen Plattform. Wer sie einsammelt, springt für den Rest der Runde doppelt so hoch.
+- Goldmünze: jede Runde liegt eine auf einer zufälligen Plattform. Wer sie einsammelt, springt 30 Sekunden lang doppelt so hoch.
+- Superhüpfer hält jetzt 30 Sekunden (statt bis Rundenende).
