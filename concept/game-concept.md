@@ -2,7 +2,7 @@
 
 ## 🎮 So spielt man
 
-- Spielname (darf sich ändern):
+- Spielname (darf sich ändern): Jumps
 - Spielart: Jump’n’Run / nach oben springen / Fliegen / eigene Idee
 - Spieler: allein / zu zweit
 - Unsere Spielfigur:
@@ -51,5 +51,7 @@ Dateinamen:
 ## Änderungen
 
 (Hier schreibt Claude auf, was ihr geändert habt.)
+
+- Spielname eingetragen: Jumps.
 
 - Welt eingetragen: Himmel, Raster aus Blöcken, Plattformen aus 2 Blöcken in verschiedenen Farben.
