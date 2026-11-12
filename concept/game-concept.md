@@ -82,3 +82,4 @@ Dateinamen:
 - Plattformen verschieben sich jede Runde (Spalte -1/0/+1).
 - Plattformen verschieben sich mehr: Spalte -2..+2, Zeile -1..+1.
 - Plattformen werden so gemischt, dass man immer überall hinkommt (Sprungweite wird geprüft).
+- Mehr Plattformen (23). Von JEDER Plattform kann man jede andere erreichen, auch nach dem Mischen.

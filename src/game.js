@@ -12,16 +12,11 @@ const GAME_TIME = 60;          // Sekunden
 const GRAVITY = 1800, JUMP = -780, SPEED = 260;
 
 // Jede Plattform = 2 Bloecke, jede mit eigener Farbe: [Spalte, Zeile, Farbe]
-const BASE_LAYOUT = [
-  [2, 15, "#e74c3c"], [13, 15, "#f1c40f"], [25, 15, "#2ecc71"],
-  [7, 12, "#3498db"], [19, 12, "#e67e22"],
-  [3, 9, "#9b59b6"], [12, 9, "#1abc9c"], [22, 9, "#e84393"],
-  [8, 6, "#f39c12"], [17, 6, "#16a085"], [27, 6, "#c0392b"],
-  [4, 3, "#2980b9"], [13, 3, "#8e44ad"], [23, 3, "#27ae60"],
-]
-
-// Jede Runde verschieben sich die Plattformen: Spalte um -2..+2, Zeile um -1..+1.
-let platforms = [];
+const COLORS = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#e67e22", "#9b59b6", "#1abc9c", "#e84393", "#f39c12", "#16a085", "#c0392b", "#2980b9"];
+const ROW_A = [2, 8, 14, 20, 26], ROW_B = [5, 11, 17, 23];
+const BASE_LAYOUT = [[15, ROW_A], [12, ROW_B], [9, ROW_A], [6, ROW_B], [3, ROW_A]]
+  .flatMap(([r, cols]) => cols.map(c => [c, r]))
+  .map(([c, r], i) => [c, r, COLORS[i % COLORS.length]]);
 
 function randomPlatforms() {
   return BASE_LAYOUT.map(([c, r, color]) => {
@@ -42,14 +37,18 @@ function canReach(a, b) {
   return gap <= maxGap;
 }
 
-// Von der ersten Plattform aus muss man ALLE Plattformen erreichen koennen.
+// Von JEDER Plattform aus muss man ALLE anderen erreichen koennen,
+// also gibt es immer eine Plattform, auf die man springen kann.
 function allReachable(list) {
-  const seen = new Set([0]), todo = [0];
-  while (todo.length) {
-    const i = todo.pop();
-    list.forEach((p, j) => { if (!seen.has(j) && canReach(list[i], p)) { seen.add(j); todo.push(j); } });
+  for (let start = 0; start < list.length; start++) {
+    const seen = new Set([start]), todo = [start];
+    while (todo.length) {
+      const i = todo.pop();
+      list.forEach((p, j) => { if (!seen.has(j) && canReach(list[i], p)) { seen.add(j); todo.push(j); } });
+    }
+    if (seen.size !== list.length) return false;
   }
-  return seen.size === list.length;
+  return true;
 }
 
 function shufflePlatforms() {
