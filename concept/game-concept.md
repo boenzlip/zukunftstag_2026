@@ -104,5 +104,3 @@ Dateinamen:
 - R-Taste: startet das ganze Spiel von vorn (Namen, Emojis, Punkte).
 - Hintergrund: dunkle Wolken ziehen langsam vorbei und es regnet (über dem Feuerkrater).
 - Feuerkrater-Hintergrund entfernt: jetzt nur Gewitterhimmel mit ziehenden Wolken und Regen. Zeit und Punkte sind weiß.
-- Spitzhacke: Spieler 1 = linke Shift-Taste, Spieler 2 = rechte Shift-Taste. Shift baut den Block ab, auf dem man steht (3 mal pro Runde). Man trägt nur 1 Block. Shift mit Block setzt ihn direkt unter den Füßen wieder ab (auch in der Luft, wie eine Treppe).
-- Spitzhacke wieder entfernt.
