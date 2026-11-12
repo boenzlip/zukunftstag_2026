@@ -85,3 +85,4 @@ Dateinamen:
 - Mehr Plattformen (23). Von JEDER Plattform kann man jede andere erreichen, auch nach dem Mischen.
 - Punkte eingebaut: Rundensieger bekommt 1 Punkt, wer zuerst 5 hat, gewinnt.
 - Rollenwechsel alle 5 Runden eingebaut, Sieg bei 10 Punkten. Spieler 1 = W/A/D, Spieler 2 = Pfeiltasten. Einfrieren: Läufer drückt S (Spieler 1) oder Pfeil runter (Spieler 2), 1x pro Runde.
+- Vor dem Spiel werden die Namen der beiden Spieler abgefragt (Name tippen, Enter).

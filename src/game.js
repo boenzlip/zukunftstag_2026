@@ -61,7 +61,21 @@ function shufflePlatforms() {
 shufflePlatforms();
 
 const keys = {};
-addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault(); });
+// Namen der Spieler (werden vor dem Spiel abgefragt)
+const names = ["", ""];
+let nameStep = 0;              // 0 = Spieler 1 tippt, 1 = Spieler 2 tippt
+const nm = n => names[n - 1] || ("Spieler " + n);
+
+addEventListener("keydown", e => {
+  if (state === "names") { // Namen eintippen
+    if (e.key === "Enter") { if (++nameStep > 1) reset(); }
+    else if (e.key === "Backspace") names[nameStep] = names[nameStep].slice(0, -1);
+    else if (e.key.length === 1 && names[nameStep].length < 12) names[nameStep] += e.key;
+    e.preventDefault();
+    return;
+  }
+  keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault();
+});
 addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 
 function makeActor(x, y) {
@@ -114,11 +128,12 @@ function endRound(who, text) {
   if (who === 2) score2++;
   if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
     matchOver = true;
-    winner = (score1 >= WIN_SCORE ? "SPIELER 1" : "SPIELER 2") + " GEWINNT DAS SPIEL!";
+    winner = (score1 >= WIN_SCORE ? nm(1) : nm(2)).toUpperCase() + " GEWINNT DAS SPIEL!";
   }
 }
 
 function update(dt) {
+  if (state === "names") return;
   if (state !== "play") {
     if (keys["enter"] || keys[" "]) {
       if (matchOver) { score1 = 0; score2 = 0; rounds = 0; matchOver = false; }
@@ -180,11 +195,11 @@ function update(dt) {
   const p1Out = player.y > H, p2Out = player2.y > H;
   const catcherN = c1 ? 1 : 2, runnerN = c1 ? 2 : 1;
   const catcherOut = c1 ? p1Out : p2Out, runnerOut = c1 ? p2Out : p1Out;
-  if (caught) endRound(catcherN, "Fänger hat gefangen: Punkt für Spieler " + catcherN + "!");
+  if (caught) endRound(catcherN, "Fänger hat gefangen: Punkt für " + nm(catcherN) + "!");
   else if (p1Out && p2Out) endRound(0, "Unentschieden!");
-  else if (catcherOut) endRound(runnerN, "Fänger ist gefallen: Punkt für Spieler " + runnerN + "!");
-  else if (runnerOut) endRound(catcherN, "Läufer ist gefallen: Punkt für Spieler " + catcherN + "!");
-  else if (timeLeft <= 0) { timeLeft = 0; endRound(runnerN, "Zeit um: Punkt für Spieler " + runnerN + "!"); }
+  else if (catcherOut) endRound(runnerN, "Fänger ist gefallen: Punkt für " + nm(runnerN) + "!");
+  else if (runnerOut) endRound(catcherN, "Läufer ist gefallen: Punkt für " + nm(catcherN) + "!");
+  else if (timeLeft <= 0) { timeLeft = 0; endRound(runnerN, "Zeit um: Punkt für " + nm(runnerN) + "!"); }
 }
 
 function drawSmiley(a, color, angry) {
@@ -289,12 +304,24 @@ function draw() {
   ctx.fillStyle = "#000"; ctx.textAlign = "left"; ctx.font = "bold 28px sans-serif";
   ctx.fillText("Zeit: " + Math.ceil(timeLeft), 16, 36);
   ctx.textAlign = "right";
-  ctx.fillText("Spieler 1: " + score1 + "   Spieler 2: " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
+  ctx.fillText(nm(1) + ": " + score1 + "   " + nm(2) + ": " + score2 + "   (bis " + WIN_SCORE + ")", W - 16, 36);
   ctx.textAlign = "left";
   ctx.font = "20px sans-serif";
   const left = SWAP_EVERY - (rounds % SWAP_EVERY);
-  ctx.fillText((cn ? "Spieler 1" : "Spieler 2") + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
+  ctx.fillText(nm(cn ? 1 : 2) + " ist Fänger (gelb). Rollenwechsel in " + left + " Runde" + (left > 1 ? "n" : ""), 16, 64);
   ctx.fillText(freezeUsed ? (freezeLeft > 0 ? "Fänger eingefroren!" : "Einfrieren benutzt") : "Läufer: " + (cn ? "Pfeil runter" : "S") + " = Fänger einfrieren (1x pro Runde)", 16, 90);
+  if (state === "names") {
+    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center";
+    ctx.font = "bold 48px sans-serif"; ctx.fillText("Jumps", W / 2, 200);
+    ctx.font = "30px sans-serif";
+    ctx.fillText("Wie heißt Spieler " + (nameStep + 1) + (nameStep === 0 ? " (W / A / D)?" : " (Pfeiltasten)?"), W / 2, 280);
+    ctx.font = "bold 44px sans-serif"; ctx.fillStyle = "#ffe135";
+    ctx.fillText(names[nameStep] + (Math.floor(performance.now() / 500) % 2 ? "_" : " "), W / 2, 350);
+    ctx.fillStyle = "#fff"; ctx.font = "22px sans-serif";
+    ctx.fillText("Name tippen, dann Enter", W / 2, 410);
+    ctx.textAlign = "left";
+  }
   if (state === "end") bigText(winner, matchOver ? "Enter = neues Spiel" : "Enter = nächste Runde");
 }
 
@@ -305,4 +332,5 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 reset();
+state = "names";
 requestAnimationFrame(loop);
