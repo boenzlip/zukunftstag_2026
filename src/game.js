@@ -83,6 +83,14 @@ function shufflePlatforms() {
 shufflePlatforms();
 
 const keys = {};
+// Musik: Lege die Datei sounds/music.mp3 in den Ordner "sounds" (dein Lied).
+// Sie startet, sobald das Spiel losgeht (Browser erlauben Ton erst nach einem Tastendruck) und laeuft in Dauerschleife.
+// M = Musik an/aus.
+const music = new Audio("sounds/music.mp3");
+music.loop = true; music.volume = 0.5;
+let musicOn = true;
+function startMusic() { if (musicOn) music.play().catch(() => {}); }   // klappt still nicht, wenn die Datei fehlt
+
 // Namen der Spieler (werden vor dem Spiel abgefragt)
 const names = ["", ""];
 let nameStep = 0;              // 0 = Spieler 1 tippt, 1 = Spieler 2 tippt
@@ -106,6 +114,7 @@ addEventListener("keydown", e => {
     e.preventDefault();
     return;
   }
+  if (e.key.toLowerCase() === "m") { musicOn = !musicOn; if (musicOn) startMusic(); else music.pause(); return; }
   if (e.key.toLowerCase() === "r") { fullRestart(); return; }   // R = ganz von vorn
   keys[e.key.toLowerCase()] = true; if (e.key === " ") e.preventDefault();
 });
@@ -211,6 +220,7 @@ function reset() {
   lever = { plat: leverSpots[Math.floor(Math.random() * leverSpots.length)], cool: false, flip: false };
   flash = 0;
   state = "play";
+  startMusic();
 }
 
 function physics(a, dt) {

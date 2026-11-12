@@ -31,7 +31,7 @@ Zum Start: eine Figur, ein kurzer Level, eine Gefahr und ein Ziel.
 ## 🔊 Später entscheiden
 
 - Sounds:
-- Musik:
+- Musik: Phonk-Lied "Vois sur ton chemin" (Benet). Datei muss von euch als `sounds/music.mp3` abgelegt werden. M = an/aus.
 
 ## 📁 Unsere Bilder
 
@@ -106,3 +106,4 @@ Dateinamen:
 - Feuerkrater-Hintergrund entfernt: jetzt nur Gewitterhimmel mit ziehenden Wolken und Regen. Zeit und Punkte sind weiß.
 - Der Fänger trägt einen roten Hut (auch nach dem Rollenwechsel).
 - Emoji-Auswahl: Es gibt jetzt 22 Pixel-Emojis. Bei jeder Auswahl werden 10 zufällige davon gezeigt (jedes nur einmal wählbar).
+- Musik eingebaut: Das Spiel spielt `sounds/music.mp3` in Dauerschleife, sobald es losgeht. M = Musik an/aus. (Die Datei selbst fehlt noch, die müsst ihr hineinlegen.)
