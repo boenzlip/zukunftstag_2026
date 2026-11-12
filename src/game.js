@@ -71,16 +71,16 @@ function update(dt) {
   // Der Fänger denkt voraus: er zielt dorthin, wo der Spieler gleich ist,
   // wechselt sein Tempo und macht kleine Pausen, damit er nicht synchron laeuft.
   chaserClock += dt;
-  const target = player.x + player.vx * 0.5;
+  const target = player.x + player.vx * 0.7;
   const dx = target - chaser.x;
-  const pace = 0.55 + 0.45 * Math.abs(Math.sin(chaserClock * 1.3));
-  const pause = Math.sin(chaserClock * 0.7 + 1) > 0.9; // kurz stehen bleiben
+  const pace = 0.7 + 0.45 * Math.abs(Math.sin(chaserClock * 1.3));
+  const pause = Math.sin(chaserClock * 0.7 + 1) > 0.97; // kurz stehen bleiben
   chaser.vx = (frozen || pause || Math.abs(dx) < 6) ? 0 : Math.sign(dx) * SPEED * pace;
   if (chaser.onGround && !frozen) {
     const aheadX = chaser.x + chaser.w / 2 + Math.sign(dx) * 50;
     const groundAhead = platforms.some(p => aheadX > p.x && aheadX < p.x + p.w && Math.abs(p.y - (chaser.y + chaser.h)) < 2);
     const playerAbove = player.y < chaser.y - 20;
-    if ((playerAbove && Math.abs(dx) < 240) || !groundAhead || Math.random() < 0.004) chaser.vy = JUMP;
+    if ((playerAbove && Math.abs(dx) < 300) || !groundAhead || Math.random() < 0.004) chaser.vy = JUMP;
   }
   physics(chaser, dt);
   if (chaser.y > canvas.height) { // Fänger gefallen -> neu auf eine Plattform setzen
